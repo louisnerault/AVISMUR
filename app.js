@@ -68,11 +68,11 @@ function afficherApplication(infos) {
   chargerReleves();
 }
 
-/** Derniers kilométrages des véhicules, gardés sur l'appareil pour le hors ligne. */
+/** Derniers kilométrages et état du parc du jour, gardés sur l'appareil pour le hors ligne. */
 async function chargerReleves() {
   try {
     const rep = await appeler('derniersReleves');
-    if (rep.ok) Ambulancier.majReleves(rep.releves);
+    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc);
   } catch (err) { /* hors ligne : on garde les derniers relevés connus */ }
 }
 

@@ -94,7 +94,10 @@ const MODELES = {
         libelle: 'Cette UMH fait-elle office de F00 aujourd\'hui (transferts DZ) ?',
         options: ['NON', 'OUI'],
         requis: true,
-        basculeF00: true, // OUI : on remplit la check-list F00 avec cette UMH
+        // OUI : on remplit la check-list F00 avec cette UMH.
+        // Question posée seulement si l'état du parc du jour n'est pas disponible :
+        // sinon l'appli sait elle-même quelle UMH est en DZ.
+        basculeF00: true,
       },
       { type: 'niveau', libelle: 'Obus 5 Litres n°1' },
       { type: 'niveau', libelle: 'Obus 5 Litres n°2' },

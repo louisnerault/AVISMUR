@@ -7,6 +7,7 @@
 const Ambulancier = (() => {
   const CLE_BROUILLONS = 'smur_brouillons_ambulancier';
   const CLE_RELEVES = 'smur_derniers_releves';
+  const CLE_PARC = 'smur_etat_parc';
   const etat = { vehicule: null, reponses: {} };
   let zoneVehicules;
   let zoneQuestions;
@@ -54,30 +55,48 @@ const Ambulancier = (() => {
     },
   };
 
+  // ---------- État du parc du jour (envoyé par le serveur, gardé pour le hors ligne) ----------
+  /** Position du véhicule (« DZ », « HS », « 1er départ PRIMAIRE »…) si l'état du parc est celui du jour. */
+  function positionDuJour(id) {
+    const parc = lireStockage(CLE_PARC);
+    if (parc.date !== aujourdhui() || !parc.vehicules || !parc.vehicules[id]) return null;
+    return parc.vehicules[id];
+  }
+  const estDZ = (p) => Boolean(p) && p.position.trim().toUpperCase() === 'DZ';
+  const estHS = (p) => Boolean(p) && (p.disponible === 'NON' || p.position.trim().toUpperCase() === 'HS');
+
   // ---------- Modèle courant ----------
   const vehicule = () => VEHICULES.find((v) => v.id === etat.vehicule);
   const questionBascule = () => MODELES.UMH.questions.find((q) => q.basculeF00);
 
-  /** Une UMH qui fait office de F00 se vérifie avec la check-list F00. */
+  /**
+   * Une UMH en DZ (qui fait office de F00) se vérifie avec la check-list F00.
+   * L'état du parc du jour décide ; sans lui, on pose la question.
+   */
   function modeleCourant() {
     const v = vehicule();
     if (!v) return null;
-    if (v.modele === 'UMH' && etat.reponses[questionBascule().libelle] === 'OUI') return 'F00';
-    return v.modele;
+    if (v.modele !== 'UMH') return v.modele;
+    const position = positionDuJour(v.id);
+    if (position) return estDZ(position) ? 'F00' : 'UMH';
+    return etat.reponses[questionBascule().libelle] === 'OUI' ? 'F00' : 'UMH';
   }
 
   function questionsCourantes() {
     const modele = modeleCourant();
     if (!modele) return [];
     const questions = MODELES[modele].questions;
-    // On garde la question « fait office de F00 » en tête pour pouvoir revenir en arrière.
-    return vehicule().modele === 'UMH' && modele === 'F00' ? [questionBascule(), ...questions] : questions;
+    // Sans état du parc, la question « fait office de F00 » reste en tête pour pouvoir revenir en arrière.
+    const avecBascule = vehicule().modele === 'UMH' && modele === 'F00' && !positionDuJour(etat.vehicule);
+    return avecBascule ? [questionBascule(), ...questions] : questions;
   }
 
   /** La question concerne-t-elle ce véhicule ? */
   const concerne = (q) => (!q.seulementPour || q.seulementPour.includes(etat.vehicule))
     && (!q.exclusPour || !q.exclusPour.includes(etat.vehicule));
-  const visible = (q) => q.type !== 'cache' && concerne(q) && (!q.si || etat.reponses[q.si.question] === q.si.valeur);
+  const visible = (q) => q.type !== 'cache' && concerne(q)
+    && !(q.basculeF00 && positionDuJour(etat.vehicule))
+    && (!q.si || etat.reponses[q.si.question] === q.si.valeur);
   const elementsDuGroupe = (g) => g.items.map((i) => (typeof i === 'string' ? { libelle: i } : i));
   const cleElement = (g, i) => i.colonne || `${g.titre} [${i.libelle}]`;
 
@@ -272,7 +291,10 @@ const Ambulancier = (() => {
       if (etat.vehicule === v.id) radio.checked = true;
       radio.addEventListener('change', () => choisirVehicule(v.id));
       const enCours = Object.keys(brouillons.lire(v.id)).length > 0;
+      const position = positionDuJour(v.id);
       const etiquette = el('label', { for: id }, el('strong', { texte: v.id }), el('small', { texte: v.modele === 'F00' ? 'HELICO' : v.modele }));
+      if (estHS(position)) etiquette.append(el('small', { classe: 'pastille hs', texte: 'HS' }));
+      else if (estDZ(position)) etiquette.append(el('small', { classe: 'pastille dz', texte: 'DZ' }));
       if (enCours) etiquette.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
       zoneVehicules.append(radio, etiquette);
     });
@@ -287,8 +309,15 @@ const Ambulancier = (() => {
     }
     const modele = modeleCourant();
     titre.textContent = v.modele === 'UMH' && modele === 'F00'
-      ? `${v.id} · fait office de F00`
+      ? `${v.id} · en DZ, fait office de F00`
       : `${v.id} · ${MODELES[modele].titre}`;
+    const position = positionDuJour(v.id);
+    if (position && (estDZ(position) || estHS(position))) {
+      const texte = estHS(position)
+        ? `D'après l'état du parc du jour, ${v.id} est HS.`
+        : `D'après l'état du parc du jour, ${v.id} est en DZ : check-list F00.`;
+      zoneQuestions.append(el('p', { classe: 'note-parc', texte }));
+    }
     questionsCourantes().filter(visible).forEach((q) => zoneQuestions.append(rendreQuestion(q)));
   }
 
@@ -364,6 +393,8 @@ const Ambulancier = (() => {
       else if (q.type === 'carburant') reponses[q.libelle] = vide ? '' : `${brute}/8`;
       else reponses[q.libelle] = vide ? '' : String(brute).trim();
     });
+    const position = positionDuJour(v.id);
+    if (position) reponses['Position (état du parc)'] = position.position;
     return { vehicule: v.id, modele: modeleCourant(), reponses, erreurs, manquants };
   }
 
@@ -379,9 +410,11 @@ const Ambulancier = (() => {
     rendreQuestions();
   }
 
-  /** Derniers kilométrages reçus du serveur. */
-  function majReleves(nouveaux) {
+  /** Derniers kilométrages et état du parc reçus du serveur. */
+  function majReleves(nouveaux, parc) {
     releves.fusionner(nouveaux);
+    if (parc && parc.date) ecrireStockage(CLE_PARC, parc);
+    rendreVehicules();
     const champ = zoneQuestions && zoneQuestions.querySelector('.saisie-km');
     if (champ && document.activeElement !== champ) rendreQuestions();
   }
