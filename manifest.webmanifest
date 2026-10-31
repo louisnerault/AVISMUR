@@ -3,7 +3,7 @@
   "short_name": "SMUR",
   "description": "Vérifications du matin et traçabilité du SMUR d'Avignon",
   "lang": "fr",
-  "start_url": "index.html",
+  "start_url": "/AVISMUR/",
   "display": "standalone",
   "background_color": "#1D4F9F",
   "theme_color": "#1D4F9F",
