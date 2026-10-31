@@ -72,7 +72,7 @@ function afficherApplication(infos) {
 async function chargerReleves() {
   try {
     const rep = await appeler('derniersReleves');
-    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc);
+    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts);
   } catch (err) { /* hors ligne : on garde les derniers relevés connus */ }
 }
 
@@ -112,6 +112,7 @@ async function envoyerFileAttente() {
           items: suivante.items,
           vehicule: suivante.vehicule,
           modele: suivante.modele,
+          anomalies: suivante.anomalies,
           idSaisie: suivante.id,
           dateSaisie: suivante.date,
         });
@@ -324,12 +325,12 @@ function enregistrerAmbulancier() {
     return;
   }
   const ok = mettreEnFile({
-    liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, items: saisie.reponses,
+    liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, items: saisie.reponses, anomalies: saisie.anomalies,
   });
   if (!ok) return;
   confirmationDemandee = false;
   $('enregistrer').textContent = 'Enregistrer la check-list';
-  Ambulancier.terminer(saisie);
+  Ambulancier.terminer(saisie, (session.lire() || {}).identifiant);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

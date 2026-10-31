@@ -27,6 +27,13 @@
  * `si: { question, valeur }` n'affiche la question que si une autre a cette réponse.
  */
 
+// Une check-list est « avec anomalies » (case orange) si un élément est manquant, si l'AdBlue
+// est à compléter, s'il y a une remarque, ou si un niveau est à ce seuil ou en dessous.
+const SEUILS_ANOMALIE = {
+  obus: 3, // sur 10 (3 = 60 bars)
+  carburant: 2, // sur 8 (un quart)
+};
+
 const VEHICULES = [
   { id: 'F21', modele: 'VML' },
   { id: 'F22', modele: 'VML' },

@@ -8,6 +8,7 @@ const Ambulancier = (() => {
   const CLE_BROUILLONS = 'smur_brouillons_ambulancier';
   const CLE_RELEVES = 'smur_derniers_releves';
   const CLE_PARC = 'smur_etat_parc';
+  const CLE_STATUTS = 'smur_statuts_jour';
   const etat = { vehicule: null, reponses: {} };
   let zoneVehicules;
   let zoneQuestions;
@@ -62,6 +63,23 @@ const Ambulancier = (() => {
     if (parc.date !== aujourdhui() || !parc.vehicules || !parc.vehicules[id]) return null;
     return parc.vehicules[id];
   }
+  // ---------- Check-lists du jour (serveur + celles faites sur cet appareil) ----------
+  function statutDuJour(id) {
+    const statuts = lireStockage(CLE_STATUTS);
+    return statuts.jour === aujourdhui() && statuts.vehicules ? statuts.vehicules[id] || null : null;
+  }
+  /** Garde, pour chaque véhicule, la check-list la plus récente du jour. */
+  function fusionnerStatuts(nouveaux) {
+    if (!nouveaux || nouveaux.jour !== aujourdhui()) return;
+    const actuels = lireStockage(CLE_STATUTS);
+    const vehicules = actuels.jour === aujourdhui() ? actuels.vehicules || {} : {};
+    Object.entries(nouveaux.vehicules || {}).forEach(([v, st]) => {
+      if (!vehicules[v] || new Date(st.date) >= new Date(vehicules[v].date)) vehicules[v] = st;
+    });
+    ecrireStockage(CLE_STATUTS, { jour: aujourdhui(), vehicules });
+  }
+  const heure = (iso) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
   const estDZ = (p) => Boolean(p) && p.position.trim().toUpperCase() === 'DZ';
   const estHS = (p) => Boolean(p) && (p.disponible === 'NON' || p.position.trim().toUpperCase() === 'HS');
 
@@ -282,20 +300,65 @@ const Ambulancier = (() => {
     }
   }
 
+  /** Pictogramme hélicoptère (UMH en DZ). */
+  const helico = () => el('svg:svg', { viewBox: '0 0 32 20', classe: 'picto-helico', 'aria-hidden': 'true' },
+    el('svg:path', { d: 'M4 2h22M15 2v3' }),
+    el('svg:path', { d: 'M9 11a6 5 0 0 1 6-5h3a6 6 0 0 1 6 6v1a2 2 0 0 1-2 2H11a2 2 0 0 1-2-2z', classe: 'plein' }),
+    el('svg:path', { d: 'M9 10H2l-1-3M10 18h14M13 15v3M21 15v3' }));
+
+  /**
+   * Couleur de la case : rouge non disponible, gris à faire, vert faite sans anomalie,
+   * orange faite avec anomalies (détail au survol ou au focus).
+   */
+  function etatVehicule(v) {
+    const position = positionDuJour(v.id);
+    const statut = statutDuJour(v.id);
+    if (estHS(position)) return { classe: 'indispo', texte: 'Non disponible', statut, position };
+    if (!statut) return { classe: 'a-faire', texte: 'CL à faire', statut, position };
+    return statut.anomalies.length
+      ? { classe: 'anomalie', texte: `CL faite · ${statut.anomalies.length} anomalie${statut.anomalies.length > 1 ? 's' : ''}`, statut, position }
+      : { classe: 'fait', texte: 'CL faite', statut, position };
+  }
+
   function rendreVehicules() {
     zoneVehicules.innerHTML = '';
     const nom = nouvelId();
     VEHICULES.forEach((v) => {
       const id = nouvelId();
-      const radio = el('input', { type: 'radio', name: nom, id, value: v.id });
+      const idInfo = nouvelId();
+      const etatV = etatVehicule(v);
+      const radio = el('input', { type: 'radio', name: nom, id, value: v.id, 'aria-describedby': idInfo });
+      if (etatV.classe === 'indispo') radio.setAttribute('aria-label', `${v.id}, non disponible`);
       if (etat.vehicule === v.id) radio.checked = true;
       radio.addEventListener('change', () => choisirVehicule(v.id));
-      const enCours = Object.keys(brouillons.lire(v.id)).length > 0;
-      const position = positionDuJour(v.id);
-      const etiquette = el('label', { for: id }, el('strong', { texte: v.id }), el('small', { texte: v.modele === 'F00' ? 'HELICO' : v.modele }));
-      if (estHS(position)) etiquette.append(el('small', { classe: 'pastille hs', texte: 'HS' }));
-      else if (estDZ(position)) etiquette.append(el('small', { classe: 'pastille dz', texte: 'DZ' }));
-      if (enCours) etiquette.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
+
+      const etiquette = el('label', { for: id, classe: `vehicule ${etatV.classe}` },
+        el('span', { classe: 'ligne-titre' }, el('strong', { texte: v.id }), el('small', { texte: v.modele === 'F00' ? 'UMH' : v.modele })));
+      // Position du jour : hélicoptère pour la DZ, sinon le départ (1er départ PRIMAIRE…).
+      if (etatV.classe === 'indispo') {
+        etiquette.append(el('small', { classe: 'position', texte: 'Non disponible' }));
+      } else if (estDZ(etatV.position)) {
+        etiquette.append(el('small', { classe: 'position' }, helico(), el('span', { texte: 'DZ' })));
+      } else if (etatV.position && etatV.position.position) {
+        etiquette.append(el('small', { classe: 'position', texte: etatV.position.position }));
+      }
+      if (Object.keys(brouillons.lire(v.id)).length) etiquette.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
+
+      // Infobulle : qui a fait la check-list et ses anomalies.
+      const info = el('span', { classe: 'infobulle', id: idInfo, role: 'tooltip' });
+      if (etatV.statut) {
+        info.append(el('strong', { texte: `CL faite à ${heure(etatV.statut.date)} par ${etatV.statut.agent}` }));
+        if (etatV.statut.anomalies.length) {
+          const liste = el('ul');
+          etatV.statut.anomalies.forEach((a) => liste.append(el('li', { texte: a })));
+          info.append(liste);
+        } else {
+          info.append(el('span', { texte: 'Aucune anomalie.' }));
+        }
+      } else {
+        info.textContent = etatV.texte;
+      }
+      etiquette.append(info);
       zoneVehicules.append(radio, etiquette);
     });
   }
@@ -314,9 +377,21 @@ const Ambulancier = (() => {
     const position = positionDuJour(v.id);
     if (position && (estDZ(position) || estHS(position))) {
       const texte = estHS(position)
-        ? `D'après l'état du parc du jour, ${v.id} est HS.`
+        ? `D'après l'état du parc du jour, ${v.id} n'est pas disponible.`
         : `D'après l'état du parc du jour, ${v.id} est en DZ : check-list F00.`;
       zoneQuestions.append(el('p', { classe: 'note-parc', texte }));
+    }
+    // Check-list déjà faite aujourd'hui : on le dit, avec les anomalies relevées.
+    const statut = statutDuJour(v.id);
+    if (statut) {
+      const note = el('div', { classe: `note-parc ${statut.anomalies.length ? 'anomalie' : 'fait'}` },
+        el('p', { texte: `Check-list déjà faite aujourd'hui à ${heure(statut.date)} par ${statut.agent}${statut.anomalies.length ? ', avec des anomalies :' : ', sans anomalie.'}` }));
+      if (statut.anomalies.length) {
+        const liste = el('ul');
+        statut.anomalies.forEach((a) => liste.append(el('li', { texte: a })));
+        note.append(liste);
+      }
+      zoneQuestions.append(note);
     }
     questionsCourantes().filter(visible).forEach((q) => zoneQuestions.append(rendreQuestion(q)));
   }
@@ -395,13 +470,33 @@ const Ambulancier = (() => {
     });
     const position = positionDuJour(v.id);
     if (position) reponses['Position (état du parc)'] = position.position;
-    return { vehicule: v.id, modele: modeleCourant(), reponses, erreurs, manquants };
+    return { vehicule: v.id, modele: modeleCourant(), reponses, erreurs, manquants, anomalies: anomalies(reponses, manquants) };
+  }
+
+  /** Textes affichés en orange : éléments manquants, niveaux bas, AdBlue, remarque. */
+  function anomalies(reponses, manquants) {
+    const liste = manquants.map((m) => `Manquant : ${m}`);
+    questionsCourantes().filter(visible).forEach((q) => {
+      const r = reponses[q.libelle];
+      if (r === '' || r === undefined) return;
+      if (q.type === 'niveau' && r <= SEUILS_ANOMALIE.obus) liste.push(`${q.libelle} : ${r}/10`);
+      if (q.type === 'carburant' && parseInt(r, 10) <= SEUILS_ANOMALIE.carburant) liste.push(`Carburant : ${r}`);
+      if (q.libelle === 'Ad-Blue' && r !== 'OK' && r !== q.sinon) liste.push(`Ad-Blue : ${r.toLowerCase()}`);
+      if (q.type === 'texte') liste.push(`Remarque : ${r}`);
+    });
+    return liste;
   }
 
   /** Après un enregistrement réussi sur l'appareil : on efface le brouillon et on repart à zéro. */
-  function terminer(saisie) {
+  function terminer(saisie, agent) {
     if (saisie && saisie.reponses.Kilométrage) {
       releves.fusionner({ [saisie.vehicule]: { km: saisie.reponses.Kilométrage, date: new Date().toISOString() } });
+    }
+    if (saisie) {
+      fusionnerStatuts({
+        jour: aujourdhui(),
+        vehicules: { [saisie.vehicule]: { date: new Date().toISOString(), agent: agent || '', anomalies: saisie.anomalies } },
+      });
     }
     if (etat.vehicule) brouillons.effacer(etat.vehicule);
     etat.vehicule = null;
@@ -410,9 +505,10 @@ const Ambulancier = (() => {
     rendreQuestions();
   }
 
-  /** Derniers kilométrages et état du parc reçus du serveur. */
-  function majReleves(nouveaux, parc) {
+  /** Derniers kilométrages, état du parc et check-lists du jour reçus du serveur. */
+  function majReleves(nouveaux, parc, statuts) {
     releves.fusionner(nouveaux);
+    fusionnerStatuts(statuts);
     if (parc && parc.date) ecrireStockage(CLE_PARC, parc);
     rendreVehicules();
     const champ = zoneQuestions && zoneQuestions.querySelector('.saisie-km');

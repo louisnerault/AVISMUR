@@ -260,12 +260,78 @@ h2 { margin: 0; font-size: 1.25rem; }
 }
 .puces input:checked + label { color: #fff; background: var(--rhone); border-color: var(--rhone); }
 .puces input:focus-visible + label { outline: 3px solid var(--orange); outline-offset: 2px; }
-.puces-vehicules label { min-width: 5.2rem; min-height: 3.8rem; line-height: 1.15; }
-.puces-vehicules input:checked + label { background: var(--bleu); border-color: var(--bleu); }
 .puces small { font-size: 0.75rem; font-weight: 400; opacity: 0.85; }
 .puces .pastille { margin-top: 0.15rem; padding: 0 0.35rem; font-weight: 700; border-radius: 4px; opacity: 1; }
 .puces .pastille.hs { color: #fff; background: var(--erreur); }
 .puces .pastille.dz { color: #fff; background: var(--orange); }
+/* Cases véhicules : gris à faire, vert faite, orange anomalies, rouge non disponible. */
+.puces-vehicules { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr)); gap: 0.5rem; }
+.puces-vehicules label.vehicule {
+  position: relative;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.15rem;
+  min-height: 4.6rem;
+  padding: 0.45rem 0.6rem;
+  font-weight: 400;
+  line-height: 1.15;
+  text-align: left;
+  color: var(--encre);
+  border-width: 2px;
+}
+.vehicule.a-faire { background: #EEF1F5; border-color: #B9C3D1; }
+.vehicule.fait { background: #DDF3EF; border-color: var(--rhone); }
+.vehicule.anomalie { background: #FFE9D2; border-color: var(--orange); }
+.vehicule.indispo { background: #FDE3E1; border-color: var(--erreur); color: var(--erreur); }
+/* Véhicule choisi : la couleur d'état reste, on l'entoure. */
+.puces-vehicules input:checked + label.vehicule {
+  color: inherit;
+  background-image: none;
+  outline: 3px solid var(--bleu);
+  outline-offset: 2px;
+  box-shadow: 0 4px 12px rgb(29 79 159 / 0.3);
+}
+.puces-vehicules input:checked + label.vehicule.a-faire { background-color: #EEF1F5; }
+.puces-vehicules input:checked + label.vehicule.fait { background-color: #DDF3EF; }
+.puces-vehicules input:checked + label.vehicule.anomalie { background-color: #FFE9D2; }
+.puces-vehicules input:checked + label.vehicule.indispo { background-color: #FDE3E1; color: var(--erreur); }
+.ligne-titre { display: flex; align-items: baseline; gap: 0.35rem; }
+.ligne-titre strong { font-size: 1.05rem; }
+.vehicule .position { display: flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; font-weight: 700; opacity: 1; }
+.picto-helico { width: 1.7rem; height: 1.1rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.picto-helico .plein { fill: currentColor; }
+
+/* Infobulle au survol (ordinateur) ou au focus clavier. */
+.infobulle {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(17rem, 85vw);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #fff;
+  background: var(--encre);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+}
+.infobulle strong { display: block; }
+.infobulle ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+@media (hover: hover) {
+  .vehicule:hover .infobulle { display: block; }
+}
+.puces-vehicules input:focus-visible + .vehicule .infobulle { display: block; }
+
+.note-parc.fait { background: #E3F5F2; border-left-color: var(--rhone); }
+.note-parc.anomalie { background: #FFF0E0; }
+.note-parc p { margin: 0; }
+.note-parc ul { margin: 0.35rem 0 0; padding-left: 1.2rem; }
+div.note-parc { padding: 0.6rem 0.8rem; }
 .note-parc { margin: -0.4rem 0 1.2rem; padding: 0.6rem 0.8rem; background: #FFF3E6; border-left: 4px solid var(--orange); border-radius: 6px; }
 .puces .en-cours { color: var(--orange); font-weight: 700; opacity: 1; }
 .puces input:checked + label .en-cours { color: #FFD8A8; }
