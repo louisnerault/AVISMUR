@@ -19,15 +19,52 @@
   </header>
 
   <main>
-    <form id="ecran-connexion" class="connexion">
-      <label for="identifiant">Nom et prénom</label>
-      <input id="identifiant" autocomplete="username" placeholder="NOM Prénom" required>
-      <label for="code">Code personnel</label>
-      <input id="code" type="password" autocomplete="current-password" autocapitalize="characters" required>
+    <!-- Connexion habituelle -->
+    <form id="ecran-connexion" class="connexion" hidden>
+      <label for="cri">Code CRI</label>
+      <input id="cri" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="username" placeholder="6 chiffres" required>
+      <label for="mdp">Mot de passe</label>
+      <input id="mdp" type="password" autocomplete="current-password" required>
       <button type="submit">Se connecter</button>
-      <p id="erreur-connexion" role="alert"></p>
+      <p class="message erreur" role="alert"></p>
+      <button type="button" class="lien" data-aller="ecran-sms">Première connexion ou mot de passe oublié</button>
     </form>
 
+    <!-- Étape 1 : demande du SMS -->
+    <form id="ecran-sms" class="connexion" hidden>
+      <h2>Première connexion</h2>
+      <p>Saisissez votre code CRI. Un code vous sera envoyé par SMS, valable 15 minutes.</p>
+      <label for="cri-sms">Code CRI</label>
+      <input id="cri-sms" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="6 chiffres" required>
+      <button type="submit">Recevoir le code par SMS</button>
+      <p class="message erreur" role="alert"></p>
+      <button type="button" class="lien" data-aller="ecran-connexion">Retour à la connexion</button>
+    </form>
+
+    <!-- Étape 2 : saisie du code SMS -->
+    <form id="ecran-code" class="connexion" hidden>
+      <h2>Code reçu par SMS</h2>
+      <p class="message info"></p>
+      <label for="code-sms">Code à 6 chiffres</label>
+      <input id="code-sms" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required>
+      <button type="submit">Valider</button>
+      <p class="message erreur" role="alert"></p>
+      <button type="button" class="lien" data-aller="ecran-sms">Je n'ai rien reçu : renvoyer un code</button>
+    </form>
+
+    <!-- Étape 3 : création du mot de passe -->
+    <form id="ecran-mdp" class="connexion" hidden>
+      <h2>Choisissez votre mot de passe</h2>
+      <p>Au moins 8 caractères, avec des lettres et des chiffres.</p>
+      <label for="nouveau-mdp">Nouveau mot de passe</label>
+      <input id="nouveau-mdp" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="confirmation-mdp">Confirmation</label>
+      <input id="confirmation-mdp" type="password" autocomplete="new-password" minlength="8" required>
+      <button type="submit">Enregistrer et se connecter</button>
+      <p class="message erreur" role="alert"></p>
+    </form>
+
+    <!-- Application -->
     <section id="ecran-checklist" hidden>
       <label for="liste">Liste</label>
       <select id="liste">

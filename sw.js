@@ -1,4 +1,4 @@
-const CACHE = 'smur-pwa-v2';
+const CACHE = 'smur-pwa-v3';
 const FICHIERS = ['index.html', 'style.css', 'app.js', 'config.js', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {

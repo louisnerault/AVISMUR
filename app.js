@@ -4,9 +4,13 @@ const ITEMS_FICTIFS = {
   iade: ['Exemple : température frigo relevée', 'Exemple : chariot d\'urgence scellé'],
 };
 
+const ECRANS = ['ecran-connexion', 'ecran-sms', 'ecran-code', 'ecran-mdp', 'ecran-checklist'];
 const $ = (id) => document.getElementById(id);
 
-// Le jeton vit le temps de l'onglet : fermer l'application = se reconnecter.
+// État du parcours de première connexion (en mémoire uniquement).
+const parcours = { cri: '', jetonCreation: '' };
+
+// Le jeton de session vit le temps de l'onglet : fermer l'application = se reconnecter.
 const session = {
   lire() {
     try { return JSON.parse(sessionStorage.getItem('smur_session')); } catch (e) { return null; }
@@ -30,28 +34,119 @@ async function appeler(action, charge = {}) {
   const rep = await r.json();
   if (rep.reconnecter) {
     session.effacer();
-    afficherConnexion('Session expirée, reconnectez-vous.');
+    afficher('ecran-connexion', 'Session expirée, reconnectez-vous.');
   }
   return rep;
 }
 
-function afficherConnexion(message = '') {
-  $('ecran-connexion').hidden = false;
-  $('ecran-checklist').hidden = true;
-  $('utilisateur').hidden = true;
-  $('erreur-connexion').textContent = message;
+/** Affiche un écran et, éventuellement, un message d'erreur dans cet écran. */
+function afficher(idEcran, erreur = '') {
+  ECRANS.forEach((id) => { $(id).hidden = id !== idEcran; });
+  $('utilisateur').hidden = idEcran !== 'ecran-checklist';
+  const zone = $(idEcran).querySelector('.erreur');
+  if (zone) zone.textContent = erreur;
+  const champ = $(idEcran).querySelector('input');
+  if (champ) champ.focus();
+}
+
+function message(idEcran, texte) {
+  $(idEcran).querySelector('.erreur').textContent = texte;
 }
 
 function afficherApplication(infos) {
-  $('ecran-connexion').hidden = true;
-  $('ecran-checklist').hidden = false;
-  $('utilisateur').hidden = false;
+  session.ecrire({ jeton: infos.jeton || session.lire().jeton, identifiant: infos.identifiant, role: infos.role });
+  afficher('ecran-checklist');
   $('nom-utilisateur').textContent = `${infos.identifiant} (${infos.role})`;
   if (infos.role === 'ambulancier' || infos.role === 'iade') {
     $('liste').value = infos.role;
   }
   afficherItems($('liste').value);
 }
+
+/** Envoie une requête depuis un formulaire en gérant l'attente et les erreurs réseau. */
+async function soumettre(idEcran, action, charge) {
+  const bouton = $(idEcran).querySelector('button[type="submit"]');
+  bouton.disabled = true;
+  message(idEcran, 'Patientez…');
+  try {
+    const rep = await appeler(action, charge);
+    message(idEcran, rep.ok ? '' : rep.erreur);
+    return rep;
+  } catch (err) {
+    message(idEcran, 'Connexion impossible (réseau ?).');
+    return { ok: false };
+  } finally {
+    bouton.disabled = false;
+  }
+}
+
+// Liens de navigation entre les écrans de connexion.
+document.querySelectorAll('[data-aller]').forEach((lien) => {
+  lien.addEventListener('click', () => {
+    if (lien.dataset.aller === 'ecran-sms' && /^\d{6}$/.test($('cri').value || parcours.cri)) {
+      $('cri-sms').value = parcours.cri || $('cri').value;
+    }
+    afficher(lien.dataset.aller);
+  });
+});
+
+// Connexion habituelle : CRI + mot de passe.
+$('ecran-connexion').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const rep = await soumettre('ecran-connexion', 'login', { cri: $('cri').value.trim(), motDePasse: $('mdp').value });
+  $('mdp').value = '';
+  if (rep.ok) afficherApplication(rep);
+});
+
+// Étape 1 : demande du SMS.
+$('ecran-sms').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const cri = $('cri-sms').value.trim();
+  const rep = await soumettre('ecran-sms', 'demanderCode', { cri });
+  if (!rep.ok) return;
+  parcours.cri = cri;
+  afficher('ecran-code');
+  $('ecran-code').querySelector('.info').textContent = rep.message;
+});
+
+// Étape 2 : vérification du code SMS.
+$('ecran-code').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const rep = await soumettre('ecran-code', 'verifierCode', { cri: parcours.cri, code: $('code-sms').value.trim() });
+  $('code-sms').value = '';
+  if (!rep.ok) return;
+  parcours.jetonCreation = rep.jetonCreation;
+  afficher('ecran-mdp');
+});
+
+// Étape 3 : création du mot de passe.
+$('ecran-mdp').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const mdp = $('nouveau-mdp').value;
+  if (mdp !== $('confirmation-mdp').value) {
+    message('ecran-mdp', 'Les deux mots de passe ne correspondent pas.');
+    return;
+  }
+  const rep = await soumettre('ecran-mdp', 'definirMotDePasse', { jetonCreation: parcours.jetonCreation, motDePasse: mdp });
+  if (rep.recommencer) {
+    afficher('ecran-sms', rep.erreur);
+    return;
+  }
+  if (!rep.ok) return;
+  $('nouveau-mdp').value = '';
+  $('confirmation-mdp').value = '';
+  parcours.cri = '';
+  parcours.jetonCreation = '';
+  afficherApplication(rep);
+});
+
+$('deconnexion').addEventListener('click', async () => {
+  try { await appeler('logout'); } catch (err) { /* déconnexion locale quand même */ }
+  session.effacer();
+  afficher('ecran-connexion');
+});
+
+// ---------- Check-lists ----------
 
 function afficherItems(liste) {
   const ul = $('items');
@@ -72,29 +167,6 @@ function afficherItems(liste) {
 function lireCoches() {
   return [...document.querySelectorAll('#items input')].map((c) => c.checked);
 }
-
-$('ecran-connexion').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  $('erreur-connexion').textContent = 'Connexion…';
-  try {
-    const rep = await appeler('login', { identifiant: $('identifiant').value, code: $('code').value });
-    $('code').value = '';
-    if (!rep.ok) {
-      $('erreur-connexion').textContent = rep.erreur;
-      return;
-    }
-    session.ecrire({ jeton: rep.jeton, identifiant: rep.identifiant, role: rep.role });
-    afficherApplication(rep);
-  } catch (err) {
-    $('erreur-connexion').textContent = 'Connexion impossible (réseau ?).';
-  }
-});
-
-$('deconnexion').addEventListener('click', async () => {
-  try { await appeler('logout'); } catch (err) { /* déconnexion locale quand même */ }
-  session.effacer();
-  afficherConnexion();
-});
 
 $('liste').addEventListener('change', (e) => afficherItems(e.target.value));
 
@@ -117,11 +189,11 @@ if ('serviceWorker' in navigator) {
 // Au chargement : reprendre la session si elle est encore valide.
 (async () => {
   const actuelle = session.lire();
-  if (!actuelle) return afficherConnexion();
+  if (!actuelle) return afficher('ecran-connexion');
   try {
     const rep = await appeler('ping');
     if (rep.ok) afficherApplication(rep);
   } catch (err) {
-    afficherConnexion('Connexion impossible (réseau ?).');
+    afficher('ecran-connexion', 'Connexion impossible (réseau ?).');
   }
 })();
