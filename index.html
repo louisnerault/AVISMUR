@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -124,7 +124,7 @@
 
     <!-- Application -->
     <section id="ecran-checklist" class="application" hidden>
-      <div class="champ">
+      <div id="choix-liste" class="champ">
         <label for="liste">Check-list</label>
         <select id="liste">
           <option value="ambulancier">Ambulancier</option>
@@ -132,10 +132,24 @@
         </select>
       </div>
 
-      <ul id="items" class="items"></ul>
+      <!-- Check-list ambulancier : véhicules -->
+      <div id="zone-ambulancier" hidden>
+        <h1>Vérification du véhicule</h1>
+        <fieldset class="question">
+          <legend>Véhicule vérifié</legend>
+          <div id="vehicules" class="puces puces-vehicules"></div>
+        </fieldset>
+        <h2 id="titre-vehicule" class="titre-vehicule" tabindex="-1"></h2>
+        <div id="questions"></div>
+      </div>
 
-      <button id="enregistrer" type="button" class="principal">Enregistrer la check-list</button>
-      <p id="statut" class="message" role="status"></p>
+      <!-- Check-list IADE : prototype, items fictifs -->
+      <ul id="items" class="items" hidden></ul>
+
+      <div class="envoi">
+        <button id="enregistrer" type="button" class="principal">Enregistrer la check-list</button>
+        <p id="statut" class="message" role="status"></p>
+      </div>
     </section>
   </main>
 
@@ -145,6 +159,8 @@
   </footer>
 
   <script src="config.js?v=5"></script>
-  <script src="app.js?v=6"></script>
+  <script src="checklists.js?v=1"></script>
+  <script src="ambulancier.js?v=1"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

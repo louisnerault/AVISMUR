@@ -212,6 +212,82 @@ button { font: inherit; cursor: pointer; }
   accent-color: var(--rhone);
 }
 
+/* ---------- Check-list ambulancier ---------- */
+h2 { margin: 0; font-size: 1.25rem; }
+.question { margin: 0 0 1.4rem; padding: 0; border: 0; min-width: 0; }
+.question legend { padding: 0; margin-bottom: 0.5rem; font-weight: 700; }
+.groupe legend {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--bleu);
+  font-size: 1.1rem;
+}
+.tout-cocher { font-size: 0.95rem; }
+.aide-question { margin: -0.3rem 0 0.5rem; font-size: 0.9rem; color: var(--gris); }
+.invisible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.titre-vehicule:not(:empty) {
+  margin: 0.5rem 0 1.2rem;
+  padding: 0.7rem 0.9rem;
+  color: #fff;
+  background: var(--bleu);
+  border-radius: var(--rayon);
+  scroll-margin-top: 1rem;
+}
+
+/* Réponses à une touche : niveaux d'obus, carburant, oui/non, véhicules. */
+.puces { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.puces input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+.puces label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  min-height: 3rem;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: #fff;
+  border: 2px solid var(--trait);
+  border-radius: var(--rayon);
+  cursor: pointer;
+  user-select: none;
+}
+.puces input:checked + label { color: #fff; background: var(--rhone); border-color: var(--rhone); }
+.puces input:focus-visible + label { outline: 3px solid var(--orange); outline-offset: 2px; }
+.puces-vehicules label { min-width: 5.2rem; min-height: 3.8rem; line-height: 1.15; }
+.puces-vehicules input:checked + label { background: var(--bleu); border-color: var(--bleu); }
+.puces small { font-size: 0.75rem; font-weight: 400; opacity: 0.85; }
+.puces .en-cours { color: var(--orange); font-weight: 700; opacity: 1; }
+.puces input:checked + label .en-cours { color: #FFD8A8; }
+
+textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  color: var(--encre);
+  border: 2px solid var(--trait);
+  border-radius: var(--rayon);
+  resize: vertical;
+}
+textarea:focus { border-color: var(--bleu); }
+
+/* Bouton d'envoi toujours à portée de pouce pendant la vérification. */
+body.connecte .envoi {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -1.25rem;
+  padding: 0.6rem 1.25rem max(0.6rem, env(safe-area-inset-bottom));
+  background: rgb(255 255 255 / 0.96);
+  border-top: 1px solid #E1E8F2;
+}
+.envoi .message:empty { display: none; }
+
 /* ---------- Pied de page ---------- */
 .pied {
   display: flex;
@@ -233,6 +309,7 @@ button { font: inherit; cursor: pointer; }
   .pied { background: none; }
   body.connecte .feuille { max-width: 52rem; }
   body.connecte .items { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+  body.connecte .envoi { margin: 0 -2.5rem -2.25rem; padding: 0.8rem 2.5rem; border-radius: 0 0 20px 20px; }
 }
 
 /* ---------- Ordinateur et grand écran : panneau bleu à gauche pour la connexion ---------- */

@@ -1,6 +1,5 @@
-// Items fictifs pour le prototype : les vrais items viendront de la feuille Checklists.
+// Items fictifs pour le prototype IADE. La check-list ambulancier est dans checklists.js.
 const ITEMS_FICTIFS = {
-  ambulancier: ['Exemple : niveau carburant', 'Exemple : kit oxygène présent', 'Exemple : batterie vérifiée'],
   iade: ['Exemple : température frigo relevée', 'Exemple : chariot d\'urgence scellé'],
 };
 
@@ -60,10 +59,11 @@ function afficherApplication(infos) {
   session.ecrire({ jeton: infos.jeton || session.lire().jeton, identifiant: infos.identifiant, role: infos.role });
   afficher('ecran-checklist');
   $('nom-utilisateur').textContent = `${infos.identifiant} (${infos.role})`;
-  if (infos.role === 'ambulancier' || infos.role === 'iade') {
-    $('liste').value = infos.role;
-  }
-  afficherItems($('liste').value);
+  // Ambulanciers et IADE ne voient que leur check-list ; l'encadrement et les admins choisissent.
+  const metier = infos.role === 'ambulancier' || infos.role === 'iade';
+  if (metier) $('liste').value = infos.role;
+  $('choix-liste').hidden = metier;
+  afficherListe($('liste').value);
   envoyerFileAttente();
 }
 
@@ -101,6 +101,8 @@ async function envoyerFileAttente() {
         rep = await appeler('saveChecklist', {
           liste: suivante.liste,
           items: suivante.items,
+          vehicule: suivante.vehicule,
+          modele: suivante.modele,
           idSaisie: suivante.id,
           dateSaisie: suivante.date,
         });
@@ -242,6 +244,14 @@ $('deconnexion').addEventListener('click', async () => {
 
 // ---------- Check-lists ----------
 
+function afficherListe(liste) {
+  $('zone-ambulancier').hidden = liste !== 'ambulancier';
+  $('items').hidden = liste === 'ambulancier';
+  if (liste === 'ambulancier') Ambulancier.afficher();
+  else afficherItems(liste);
+  annulerConfirmation();
+}
+
 function afficherItems(liste) {
   const ul = $('items');
   ul.innerHTML = '';
@@ -262,21 +272,67 @@ function lireCoches() {
   return [...document.querySelectorAll('#items input')].map((c) => c.checked);
 }
 
-$('liste').addEventListener('change', (e) => afficherItems(e.target.value));
+function statut(texte, classe = '') {
+  $('statut').textContent = texte;
+  $('statut').className = `message ${classe}`.trim();
+}
 
-$('enregistrer').addEventListener('click', () => {
+// Éléments non cochés : on demande une confirmation avant d'envoyer.
+let confirmationDemandee = false;
+function annulerConfirmation() {
+  if (!confirmationDemandee) return;
+  confirmationDemandee = false;
+  $('enregistrer').textContent = 'Enregistrer la check-list';
+  statut('');
+}
+
+/** Garde la check-list sur l'appareil puis lance l'envoi. */
+function mettreEnFile(saisie) {
   try {
     const elements = fileAttente.lire();
-    elements.push({ id: identifiantUnique(), liste: $('liste').value, items: lireCoches(), date: new Date().toISOString() });
+    elements.push({ id: identifiantUnique(), date: new Date().toISOString(), ...saisie });
     fileAttente.ecrire(elements);
   } catch (err) {
-    $('statut').textContent = 'Check-list non enregistrée : la mémoire de l\'appareil est pleine.';
-    $('statut').className = 'message erreur';
+    statut('Check-list non enregistrée : la mémoire de l\'appareil est pleine.', 'erreur');
+    return false;
+  }
+  statut('Enregistrement…');
+  envoyerFileAttente();
+  return true;
+}
+
+function enregistrerAmbulancier() {
+  const saisie = Ambulancier.lire();
+  if (saisie.erreurs.length) {
+    statut(`À compléter : ${saisie.erreurs.join(', ')}.`, 'erreur');
     return;
   }
-  $('statut').textContent = 'Enregistrement…';
-  $('statut').className = 'message';
-  envoyerFileAttente();
+  if (saisie.manquants.length && !confirmationDemandee) {
+    confirmationDemandee = true;
+    statut(`Non coché (sera noté manquant) : ${saisie.manquants.join(' ; ')}. Cochez-les ou appuyez de nouveau pour envoyer quand même.`, 'erreur');
+    $('enregistrer').textContent = 'Envoyer quand même';
+    return;
+  }
+  const ok = mettreEnFile({
+    liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, items: saisie.reponses,
+  });
+  if (!ok) return;
+  confirmationDemandee = false;
+  $('enregistrer').textContent = 'Enregistrer la check-list';
+  Ambulancier.terminer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('liste').addEventListener('change', (e) => afficherListe(e.target.value));
+$('zone-ambulancier').addEventListener('reponse', annulerConfirmation);
+Ambulancier.initialiser();
+
+$('enregistrer').addEventListener('click', () => {
+  if ($('liste').value === 'ambulancier') {
+    enregistrerAmbulancier();
+    return;
+  }
+  mettreEnFile({ liste: $('liste').value, items: lireCoches() });
 });
 
 window.addEventListener('online', () => envoyerFileAttente());
