@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1d4ed8">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <title>Check-lists SMUR (prototype)</title>
+</head>
+<body>
+  <header>
+    <h1>Check-lists SMUR</h1>
+    <p class="avertissement">Prototype — données fictives</p>
+  </header>
+
+  <main>
+    <section>
+      <label for="liste">Liste</label>
+      <select id="liste">
+        <option value="ambulancier">Ambulancier</option>
+        <option value="iade">IADE</option>
+      </select>
+    </section>
+
+    <ul id="items" class="items"></ul>
+
+    <button id="enregistrer" type="button">Enregistrer</button>
+    <p id="statut" role="status"></p>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

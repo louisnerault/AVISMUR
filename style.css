@@ -1,0 +1,26 @@
+/* Mobile d'abord, puis tablette, ordinateur et grand écran */
+:root { --bleu: #1d4ed8; --fond: #f5f7fb; --texte: #111827; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--fond); color: var(--texte); }
+header, main { padding: 1rem; max-width: 60rem; margin: 0 auto; }
+h1 { font-size: 1.4rem; margin: 0.5rem 0; }
+.avertissement { color: #b45309; font-size: 0.9rem; margin: 0; }
+select { width: 100%; padding: 0.75rem; font-size: 1rem; margin: 0.25rem 0 1rem; }
+.items { list-style: none; padding: 0; margin: 0 0 1rem; }
+.items li { background: #fff; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+.items label { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; font-size: 1.05rem; min-height: 3rem; }
+.items input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
+button { width: 100%; padding: 1rem; font-size: 1.05rem; background: var(--bleu); color: #fff; border: 0; border-radius: 0.5rem; }
+
+/* Tablette */
+@media (min-width: 640px) {
+  .items { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .items li { margin: 0; }
+}
+
+/* Ordinateur et grand écran */
+@media (min-width: 1024px) {
+  main { max-width: 80rem; }
+  .items { grid-template-columns: 1fr 1fr 1fr; }
+  button { width: auto; min-width: 16rem; }
+}
