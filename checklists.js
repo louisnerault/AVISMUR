@@ -11,12 +11,19 @@
  * Quand l'en-tête du Sheet est différent (faute de frappe…), on le précise avec `colonne`.
  *
  * Types de questions :
- *   niveau  : obus / bouteille, de 0 à 10 (10 = 200 bars)
- *   groupe  : liste d'éléments à cocher « OK » (non coché = manquant)
- *   fait    : case « Fait »
- *   nombre  : saisie numérique (kilométrage)
- *   choix   : une réponse parmi `options`
- *   texte   : remarques libres
+ *   niveau      : obus / bouteille, curseur de 0 à 10 (10 = plein, 200 bars)
+ *   carburant   : jauge, curseur de 0 à 8 (enregistré « 6/8 »)
+ *   kilometrage : affiche le dernier relevé du véhicule et refuse un kilométrage inférieur
+ *   groupe      : liste d'éléments à cocher « OK » (non coché = manquant)
+ *   fait        : case « Fait »
+ *   choix       : une réponse parmi `options`
+ *   texte       : remarques libres
+ *   cache       : pas affichée ; valeur selon le véhicule (`valeurs`, sinon `defaut`)
+ *
+ * Restrictions par véhicule :
+ *   seulementPour: ['F26']  la question n'existe que pour ces véhicules
+ *   exclusPour: ['F28']     la question n'est pas posée pour ces véhicules ;
+ *                           `sinon` donne alors la réponse enregistrée
  * `si: { question, valeur }` n'affiche la question que si une autre a cette réponse.
  */
 
@@ -31,17 +38,18 @@ const VEHICULES = [
   { id: 'F00', modele: 'F00', libelle: 'F00 · ambulance HELICO' },
 ];
 
-const CARBURANT = { type: 'choix', libelle: 'Carburant', options: ['1/4', '2/4', '3/4', '4/4'], requis: true };
 const ADBLUE = {
   type: 'choix',
   libelle: 'Ad-Blue',
-  options: ['OK', 'Niveau à compléter', 'Véhicule non concerné par l\'AdBlue'],
+  options: ['OK', 'Niveau à compléter'],
   requis: true,
+  exclusPour: ['F28'],
+  sinon: 'Véhicule non concerné par l\'AdBlue',
 };
 const FIN = [
   { type: 'fait', libelle: 'Entretien quotidien' },
-  { type: 'nombre', libelle: 'Kilométrage', requis: true },
-  CARBURANT,
+  { type: 'kilometrage', libelle: 'Kilométrage', requis: true },
+  { type: 'carburant', libelle: 'Carburant', requis: true },
   ADBLUE,
   { type: 'texte', libelle: 'Remarques' },
 ];
@@ -91,12 +99,9 @@ const MODELES = {
       { type: 'niveau', libelle: 'Obus 5 Litres n°1' },
       { type: 'niveau', libelle: 'Obus 5 Litres n°2' },
       { type: 'niveau', libelle: 'Obus 15 Litres' },
-      { type: 'choix', libelle: 'Y-a-t-il un deuxième obus 15 Litres dans l\'UMH?', options: ['NON', 'OUI'], requis: true },
-      {
-        type: 'niveau',
-        libelle: 'Obus 15 Litres (supplémentaire)',
-        si: { question: 'Y-a-t-il un deuxième obus 15 Litres dans l\'UMH?', valeur: 'OUI' },
-      },
+      // Seule F26 a une deuxième B15.
+      { type: 'niveau', libelle: 'Obus 15 Litres (supplémentaire)', seulementPour: ['F26'] },
+      { type: 'cache', libelle: 'Y-a-t-il un deuxième obus 15 Litres dans l\'UMH?', valeurs: { F26: 'OUI' }, defaut: 'NON' },
       {
         type: 'groupe',
         titre: 'Poste de conduite',

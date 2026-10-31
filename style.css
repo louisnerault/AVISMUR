@@ -266,6 +266,116 @@ h2 { margin: 0; font-size: 1.25rem; }
 .puces .en-cours { color: var(--orange); font-weight: 700; opacity: 1; }
 .puces input:checked + label .en-cours { color: #FFD8A8; }
 
+/* Curseurs : obus (bouteille) et carburant (jauge). */
+.curseur { display: grid; grid-template-areas: "aide" "piste" "valeur"; --pouce: 1.5rem; }
+.curseur .aide-question { grid-area: aide; }
+.curseur legend label { font-weight: 700; }
+.valeur-curseur { grid-area: valeur; margin: 0.4rem 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.curseur[data-vide] .valeur-curseur { font-weight: 400; font-style: italic; color: var(--gris); }
+.curseur { --couleur: var(--rhone); }
+.curseur[data-alerte="moyen"] { --couleur: var(--orange); }
+.curseur[data-alerte="bas"] { --couleur: var(--erreur); }
+
+.curseur input[type=range] {
+  grid-area: piste;
+  position: relative; /* au-dessus de la bouteille, qui est positionnée */
+  z-index: 1;
+  width: 100%;
+  min-height: 0;
+  height: 3.4rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.curseur input[type=range]::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.curseur input[type=range]::-moz-range-track { height: 100%; background: transparent; }
+.curseur input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--pouce);
+  height: 100%;
+  background: #fff;
+  border: 3px solid var(--encre);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.curseur input[type=range]::-moz-range-thumb {
+  width: var(--pouce);
+  height: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 3px solid var(--encre);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.curseur[data-vide] input[type=range]::-webkit-slider-thumb { opacity: 0.45; border-style: dashed; }
+.curseur[data-vide] input[type=range]::-moz-range-thumb { opacity: 0.45; border-style: dashed; }
+.curseur input[type=range]:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 10px; }
+
+/* Bouteille couchée, ogive à droite, sous le curseur. */
+.bouteille {
+  grid-area: piste;
+  position: relative;
+  height: 3.4rem;
+  margin-right: 0.7rem;
+  background: #F1F5FA;
+  border: 3px solid #8A9BB5;
+  border-radius: 0.9rem 1.7rem 1.7rem 0.9rem;
+  overflow: hidden;
+}
+.bouteille::after { /* robinet */
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -0.7rem;
+  width: 0.7rem;
+  height: 1.1rem;
+  transform: translateY(-50%);
+  background: #8A9BB5;
+}
+.niveau { position: relative; }
+.niveau .bouteille { overflow: visible; }
+.remplissage {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--niveau, 0) * (100% - var(--pouce)) + var(--pouce) / 2);
+  background: var(--couleur);
+  border-radius: 0.7rem 0 0 0.7rem;
+  transition: width 0.1s, background-color 0.2s;
+}
+.curseur[data-vide] .remplissage { width: 0; }
+.graduations {
+  position: absolute;
+  inset: 0 calc(var(--pouce) / 2);
+  background: repeating-linear-gradient(to right, rgb(19 41 75 / 0.25) 0 1px, transparent 1px 10%);
+}
+
+/* Jauge de carburant. */
+.jauge { grid-area: jauge; width: 100%; max-width: 15rem; justify-self: center; margin-bottom: 0.2rem; }
+.curseur:has(.jauge) { grid-template-areas: "jauge" "piste" "valeur"; }
+.curseur:has(.jauge) .valeur-curseur { text-align: center; }
+.curseur:has(.jauge) input[type=range] {
+  height: 2.6rem;
+  background: linear-gradient(to right, transparent calc(var(--pouce) / 2), #DCE5F1 0 calc(100% - var(--pouce) / 2), transparent 0) center / 100% 8px no-repeat;
+}
+.jauge-arc { fill: none; stroke: #DCE5F1; stroke-width: 12; }
+.jauge-reserve { fill: none; stroke: var(--erreur); stroke-width: 12; }
+.jauge-trait { stroke: var(--encre); stroke-width: 2.5; stroke-linecap: round; }
+.jauge-texte { font: 700 14px 'Atkinson Hyperlegible', system-ui, sans-serif; fill: var(--encre); text-anchor: middle; }
+.jauge-pompe { fill: none; stroke: var(--gris); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.jauge-aiguille line { stroke: var(--couleur); stroke-width: 5; stroke-linecap: round; }
+.jauge-aiguille circle { fill: var(--encre); }
+.jauge-aiguille { transition: transform 0.15s; }
+.curseur[data-vide] .jauge-aiguille { opacity: 0.25; }
+
+.erreur-champ { margin: 0.2rem 0 0; color: var(--erreur); font-weight: 700; }
+.erreur-champ:empty { display: none; }
+input[aria-invalid="true"] { border-color: var(--erreur); }
+
 textarea {
   width: 100%;
   padding: 0.7rem 0.9rem;
@@ -281,6 +391,7 @@ textarea:focus { border-color: var(--bleu); }
 body.connecte .envoi {
   position: sticky;
   bottom: 0;
+  z-index: 2;
   margin: 0 -1.25rem;
   padding: 0.6rem 1.25rem max(0.6rem, env(safe-area-inset-bottom));
   background: rgb(255 255 255 / 0.96);

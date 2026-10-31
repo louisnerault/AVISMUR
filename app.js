@@ -65,6 +65,15 @@ function afficherApplication(infos) {
   $('choix-liste').hidden = metier;
   afficherListe($('liste').value);
   envoyerFileAttente();
+  chargerReleves();
+}
+
+/** Derniers kilométrages des véhicules, gardés sur l'appareil pour le hors ligne. */
+async function chargerReleves() {
+  try {
+    const rep = await appeler('derniersReleves');
+    if (rep.ok) Ambulancier.majReleves(rep.releves);
+  } catch (err) { /* hors ligne : on garde les derniers relevés connus */ }
 }
 
 // ---------- File d'attente hors ligne ----------
@@ -121,6 +130,7 @@ async function envoyerFileAttente() {
   } finally {
     envoiEnCours = false;
   }
+  if (envoyees) chargerReleves();
   bilanEnvoi({ envoyees, restantes: fileAttente.lire().length, erreurServeur });
 }
 
@@ -319,7 +329,7 @@ function enregistrerAmbulancier() {
   if (!ok) return;
   confirmationDemandee = false;
   $('enregistrer').textContent = 'Enregistrer la check-list';
-  Ambulancier.terminer();
+  Ambulancier.terminer(saisie);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
