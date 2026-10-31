@@ -6,6 +6,7 @@ const ITEMS_FICTIFS = {
 
 const ECRANS = ['ecran-connexion', 'ecran-sms', 'ecran-code', 'ecran-mdp', 'ecran-checklist'];
 const $ = (id) => document.getElementById(id);
+const ERREUR_RESEAU = 'Le serveur ne répond pas. Vérifiez la connexion internet puis réessayez. Si le problème continue, prévenez l\'administrateur.';
 
 // État du parcours de première connexion (en mémoire uniquement).
 const parcours = { cri: '', jetonCreation: '' };
@@ -42,7 +43,9 @@ async function appeler(action, charge = {}) {
 /** Affiche un écran et, éventuellement, un message d'erreur dans cet écran. */
 function afficher(idEcran, erreur = '') {
   ECRANS.forEach((id) => { $(id).hidden = id !== idEcran; });
-  $('utilisateur').hidden = idEcran !== 'ecran-checklist';
+  const connecte = idEcran === 'ecran-checklist';
+  $('utilisateur').hidden = !connecte;
+  document.body.classList.toggle('connecte', connecte);
   const zone = $(idEcran).querySelector('.erreur');
   if (zone) zone.textContent = erreur;
   const champ = $(idEcran).querySelector('input');
@@ -73,7 +76,7 @@ async function soumettre(idEcran, action, charge) {
     message(idEcran, rep.ok ? '' : rep.erreur);
     return rep;
   } catch (err) {
-    message(idEcran, 'Connexion impossible (réseau ?).');
+    message(idEcran, ERREUR_RESEAU);
     return { ok: false };
   } finally {
     bouton.disabled = false;
@@ -140,6 +143,31 @@ $('ecran-mdp').addEventListener('submit', async (e) => {
   afficherApplication(rep);
 });
 
+// Champs numériques : on ne garde que les chiffres.
+document.querySelectorAll('.saisie-chiffres').forEach((champ) => {
+  champ.addEventListener('input', () => {
+    const chiffres = champ.value.replace(/\D/g, '').slice(0, 6);
+    if (champ.value !== chiffres) champ.value = chiffres;
+  });
+});
+
+// Le code SMS est validé dès que les 6 chiffres sont saisis.
+$('code-sms').addEventListener('input', () => {
+  if ($('code-sms').value.length === 6) $('ecran-code').requestSubmit();
+});
+
+// Boutons « Afficher / Masquer » des mots de passe.
+document.querySelectorAll('.voir').forEach((bouton) => {
+  bouton.addEventListener('click', () => {
+    const champ = $(bouton.dataset.cible);
+    const visible = champ.type === 'password';
+    champ.type = visible ? 'text' : 'password';
+    bouton.textContent = visible ? 'Masquer' : 'Afficher';
+    bouton.setAttribute('aria-pressed', String(visible));
+    champ.focus();
+  });
+});
+
 $('deconnexion').addEventListener('click', async () => {
   try { await appeler('logout'); } catch (err) { /* déconnexion locale quand même */ }
   session.effacer();
@@ -172,13 +200,16 @@ $('liste').addEventListener('change', (e) => afficherItems(e.target.value));
 
 $('enregistrer').addEventListener('click', async () => {
   const liste = $('liste').value;
-  $('statut').textContent = 'Envoi…';
+  $('statut').textContent = 'Enregistrement…';
+  $('statut').className = 'message';
   try {
     const rep = await appeler('saveChecklist', { liste, items: lireCoches() });
     if (rep.reconnecter) return;
-    $('statut').textContent = rep.ok ? 'Enregistré.' : `Erreur : ${rep.erreur}`;
+    $('statut').textContent = rep.ok ? 'Check-list enregistrée.' : rep.erreur;
+    $('statut').className = rep.ok ? 'message succes' : 'message erreur';
   } catch (err) {
-    $('statut').textContent = 'Envoi impossible (réseau ?). Rien n\'a été enregistré.';
+    $('statut').textContent = 'Check-list non enregistrée : le serveur ne répond pas. Vérifiez la connexion puis réessayez.';
+    $('statut').className = 'message erreur';
   }
 });
 
@@ -194,6 +225,6 @@ if ('serviceWorker' in navigator) {
     const rep = await appeler('ping');
     if (rep.ok) afficherApplication(rep);
   } catch (err) {
-    afficher('ecran-connexion', 'Connexion impossible (réseau ?).');
+    afficher('ecran-connexion', ERREUR_RESEAU);
   }
 })();

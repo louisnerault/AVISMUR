@@ -2,82 +2,146 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1D4F9F">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <title>Check-lists SMUR (prototype)</title>
+  <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
-  <header>
-    <h1>Check-lists SMUR</h1>
-    <p class="avertissement">Prototype</p>
-    <p id="utilisateur" hidden>
+  <header class="bandeau">
+    <div class="marque">
+      <img class="logo-smur" src="img/logo-smur.png" alt="SAMU 84 / SMUR Avignon" width="160" height="160">
+      <div class="titres">
+        <p class="app-nom">Check-lists SMUR</p>
+        <p class="app-lieu">Vérifications du matin et traçabilité</p>
+      </div>
+    </div>
+
+    <svg class="ecg" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M0 38 H250 l8 -6 l8 6 h10 l6 6 l10 -40 l10 52 l8 -18 h16 q10 -14 20 0 H600" />
+    </svg>
+
+    <div id="utilisateur" class="utilisateur" hidden>
       <span id="nom-utilisateur"></span>
-      <button id="deconnexion" type="button" class="lien">Se déconnecter</button>
-    </p>
+      <button id="deconnexion" type="button" class="lien lien-clair">Se déconnecter</button>
+    </div>
   </header>
 
-  <main>
+  <main class="feuille">
     <!-- Connexion habituelle -->
-    <form id="ecran-connexion" class="connexion" hidden>
-      <label for="cri">Code CRI</label>
-      <input id="cri" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="username" placeholder="6 chiffres" required>
-      <label for="mdp">Mot de passe</label>
-      <input id="mdp" type="password" autocomplete="current-password" required>
-      <button type="submit">Se connecter</button>
+    <form id="ecran-connexion" class="formulaire" hidden novalidate>
+      <h1>Connexion</h1>
+      <div class="champ">
+        <label for="cri">Code CRI</label>
+        <input id="cri" class="saisie-chiffres" inputmode="numeric" autocomplete="username" placeholder="6 chiffres" required>
+      </div>
+      <div class="champ">
+        <label for="mdp">Mot de passe</label>
+        <div class="avec-bouton">
+          <input id="mdp" type="password" autocomplete="current-password" required>
+          <button type="button" class="voir" data-cible="mdp" aria-pressed="false">Afficher</button>
+        </div>
+      </div>
+      <button type="submit" class="principal">Se connecter</button>
       <p class="message erreur" role="alert"></p>
-      <button type="button" class="lien" data-aller="ecran-sms">Première connexion ou mot de passe oublié</button>
+      <div class="aide">
+        <p>Première connexion ou mot de passe oublié ?</p>
+        <button type="button" class="lien" data-aller="ecran-sms">Recevoir un code par SMS</button>
+      </div>
     </form>
 
-    <!-- Étape 1 : demande du SMS -->
-    <form id="ecran-sms" class="connexion" hidden>
-      <h2>Première connexion</h2>
-      <p>Saisissez votre code CRI. Un code vous sera envoyé par SMS, valable 15 minutes.</p>
-      <label for="cri-sms">Code CRI</label>
-      <input id="cri-sms" inputmode="numeric" pattern="\d{6}" maxlength="6" placeholder="6 chiffres" required>
-      <button type="submit">Recevoir le code par SMS</button>
+    <!-- Première connexion, étape 1 -->
+    <form id="ecran-sms" class="formulaire" hidden novalidate>
+      <ol class="etapes" aria-label="Première connexion">
+        <li aria-current="step">Code CRI</li>
+        <li>Code SMS</li>
+        <li>Mot de passe</li>
+      </ol>
+      <h1>Votre code CRI</h1>
+      <p class="consigne">C'est votre matricule hospitalier à 6 chiffres. Vous recevrez un code par SMS sur le numéro enregistré au service.</p>
+      <div class="champ">
+        <label for="cri-sms">Code CRI</label>
+        <input id="cri-sms" class="saisie-chiffres" inputmode="numeric" placeholder="6 chiffres" required>
+      </div>
+      <button type="submit" class="principal">Recevoir le code par SMS</button>
       <p class="message erreur" role="alert"></p>
-      <button type="button" class="lien" data-aller="ecran-connexion">Retour à la connexion</button>
+      <div class="aide">
+        <button type="button" class="lien" data-aller="ecran-connexion">Retour à la connexion</button>
+      </div>
     </form>
 
-    <!-- Étape 2 : saisie du code SMS -->
-    <form id="ecran-code" class="connexion" hidden>
-      <h2>Code reçu par SMS</h2>
-      <p class="message info"></p>
-      <label for="code-sms">Code à 6 chiffres</label>
-      <input id="code-sms" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required>
-      <button type="submit">Valider</button>
+    <!-- Première connexion, étape 2 -->
+    <form id="ecran-code" class="formulaire" hidden novalidate>
+      <ol class="etapes" aria-label="Première connexion">
+        <li class="fait">Code CRI</li>
+        <li aria-current="step">Code SMS</li>
+        <li>Mot de passe</li>
+      </ol>
+      <h1>Code reçu par SMS</h1>
+      <p class="consigne message info"></p>
+      <div class="champ">
+        <label for="code-sms">Code à 6 chiffres, valable 15 minutes</label>
+        <input id="code-sms" class="saisie-chiffres saisie-code" inputmode="numeric" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="principal">Valider le code</button>
       <p class="message erreur" role="alert"></p>
-      <button type="button" class="lien" data-aller="ecran-sms">Je n'ai rien reçu : renvoyer un code</button>
+      <div class="aide">
+        <p>Rien reçu après une minute ?</p>
+        <button type="button" class="lien" data-aller="ecran-sms">Renvoyer un code</button>
+      </div>
     </form>
 
-    <!-- Étape 3 : création du mot de passe -->
-    <form id="ecran-mdp" class="connexion" hidden>
-      <h2>Choisissez votre mot de passe</h2>
-      <p>Au moins 8 caractères, avec des lettres et des chiffres.</p>
-      <label for="nouveau-mdp">Nouveau mot de passe</label>
-      <input id="nouveau-mdp" type="password" autocomplete="new-password" minlength="8" required>
-      <label for="confirmation-mdp">Confirmation</label>
-      <input id="confirmation-mdp" type="password" autocomplete="new-password" minlength="8" required>
-      <button type="submit">Enregistrer et se connecter</button>
+    <!-- Première connexion, étape 3 -->
+    <form id="ecran-mdp" class="formulaire" hidden novalidate>
+      <ol class="etapes" aria-label="Première connexion">
+        <li class="fait">Code CRI</li>
+        <li class="fait">Code SMS</li>
+        <li aria-current="step">Mot de passe</li>
+      </ol>
+      <h1>Choisissez votre mot de passe</h1>
+      <p class="consigne">Au moins 8 caractères, avec des lettres et des chiffres. Vous l'utiliserez à chaque connexion avec votre code CRI.</p>
+      <div class="champ">
+        <label for="nouveau-mdp">Nouveau mot de passe</label>
+        <div class="avec-bouton">
+          <input id="nouveau-mdp" type="password" autocomplete="new-password" required>
+          <button type="button" class="voir" data-cible="nouveau-mdp" aria-pressed="false">Afficher</button>
+        </div>
+      </div>
+      <div class="champ">
+        <label for="confirmation-mdp">Confirmez le mot de passe</label>
+        <input id="confirmation-mdp" type="password" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="principal">Enregistrer et se connecter</button>
       <p class="message erreur" role="alert"></p>
     </form>
 
     <!-- Application -->
-    <section id="ecran-checklist" hidden>
-      <label for="liste">Liste</label>
-      <select id="liste">
-        <option value="ambulancier">Ambulancier</option>
-        <option value="iade">IADE</option>
-      </select>
+    <section id="ecran-checklist" class="application" hidden>
+      <div class="champ">
+        <label for="liste">Check-list</label>
+        <select id="liste">
+          <option value="ambulancier">Ambulancier</option>
+          <option value="iade">IADE</option>
+        </select>
+      </div>
 
       <ul id="items" class="items"></ul>
 
-      <button id="enregistrer" type="button">Enregistrer</button>
-      <p id="statut" role="status"></p>
+      <button id="enregistrer" type="button" class="principal">Enregistrer la check-list</button>
+      <p id="statut" class="message" role="status"></p>
     </section>
   </main>
+
+  <footer class="pied">
+    <img class="logo-cha" src="img/logo-cha.png" alt="Centre hospitalier d'Avignon" width="29" height="40">
+    <p>Centre hospitalier d'Avignon<br><span>Prototype à usage interne</span></p>
+  </footer>
 
   <script src="config.js"></script>
   <script src="app.js"></script>

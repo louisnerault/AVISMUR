@@ -1,37 +1,266 @@
-/* Mobile d'abord, puis tablette, ordinateur et grand écran */
-:root { --bleu: #1d4ed8; --fond: #f5f7fb; --texte: #111827; }
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; font-family: system-ui, sans-serif; background: var(--fond); color: var(--texte); }
-header, main { padding: 1rem; max-width: 60rem; margin: 0 auto; }
-h1 { font-size: 1.4rem; margin: 0.5rem 0; }
-.avertissement { color: #b45309; font-size: 0.9rem; margin: 0; }
-select { width: 100%; padding: 0.75rem; font-size: 1rem; margin: 0.25rem 0 1rem; }
-.items { list-style: none; padding: 0; margin: 0 0 1rem; }
-.items li { background: #fff; border-radius: 0.5rem; margin-bottom: 0.5rem; }
-.items label { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; font-size: 1.05rem; min-height: 3rem; }
-.items input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
-button { width: 100%; padding: 1rem; font-size: 1.05rem; background: var(--bleu); color: #fff; border: 0; border-radius: 0.5rem; }
-.connexion { display: flex; flex-direction: column; gap: 0.25rem; max-width: 24rem; }
-.connexion input { padding: 0.75rem; font-size: 1rem; margin-bottom: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
-.connexion h2 { font-size: 1.2rem; margin: 0 0 0.25rem; }
-.connexion p { margin: 0 0 0.75rem; }
-.message.erreur { color: #b91c1c; min-height: 1.5rem; margin: 0.5rem 0 0; }
-.message.info { color: #1e3a8a; }
-.connexion button.lien { align-self: flex-start; }
-button:disabled { opacity: 0.6; }
-#utilisateur { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0 0; font-size: 0.95rem; }
-button.lien { width: auto; min-width: 0; padding: 0.25rem 0; background: none; color: var(--bleu); text-decoration: underline; }
-
-/* Tablette */
-@media (min-width: 640px) {
-  .items { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-  .items li { margin: 0; }
+/*
+ * Check-lists SMUR Avignon
+ * Couleurs tirées des logos : bleu et orange du CH d'Avignon, turquoise du Rhône (logo SMUR).
+ * Mobile d'abord ; tablette, ordinateur et grand écran ensuite.
+ */
+:root {
+  --bleu: #1D4F9F;       /* bleu CH : bandeau, boutons */
+  --bleu-fonce: #163E7E; /* survol, appui */
+  --encre: #13294B;      /* texte */
+  --gris: #4A5B76;       /* texte secondaire */
+  --trait: #C9D6E8;      /* bordures des champs */
+  --ciel: #EEF4FB;       /* fond de page */
+  --orange: #E07A12;     /* touche : focus, étape en cours (jamais pour du texte) */
+  --rhone: #1E8C82;      /* confirmations */
+  --erreur: #B42318;
+  --rayon: 12px;
+  font-size: 17px;
 }
 
-/* Ordinateur et grand écran */
-@media (min-width: 1024px) {
-  main { max-width: 80rem; }
-  .items { grid-template-columns: 1fr 1fr 1fr; }
-  button { width: auto; min-width: 16rem; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  line-height: 1.45;
+  color: var(--encre);
+  background: var(--ciel);
+}
+
+/* ---------- Bandeau ---------- */
+.bandeau {
+  position: relative;
+  padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem 4rem;
+  color: #fff;
+  background: var(--bleu);
+  overflow: hidden;
+}
+.marque { position: relative; z-index: 1; display: flex; align-items: center; gap: 0.9rem; }
+.logo-smur { width: 64px; height: 64px; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.25)); }
+.app-nom { margin: 0; font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.app-lieu { margin: 0.15rem 0 0; font-size: 0.95rem; opacity: 0.85; }
+
+/* Le tracé ECG du logo, dessiné une fois au chargement. */
+.ecg {
+  position: absolute;
+  left: 0;
+  bottom: 1.6rem;
+  width: 100%;
+  height: 40px;
+  fill: none;
+  stroke: #8FD8CF;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1400;
+  stroke-dashoffset: 0;
+  opacity: 0.9;
+  animation: trace 1.8s ease-out 0.2s backwards;
+}
+@keyframes trace { from { stroke-dashoffset: 1400; } }
+
+.utilisateur {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin-top: 0.9rem;
+  font-weight: 700;
+}
+
+/* ---------- Feuille de contenu ---------- */
+.feuille {
+  flex: 1;
+  width: 100%;
+  max-width: 30rem;
+  margin: -1.5rem auto 0;
+  padding: 1.75rem 1.25rem 2rem;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+}
+
+h1 { margin: 0 0 0.5rem; font-size: 1.5rem; line-height: 1.2; }
+.consigne { margin: 0 0 1.25rem; color: var(--gris); max-width: 34em; }
+
+.formulaire { display: flex; flex-direction: column; }
+.champ { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1.1rem; }
+label { font-weight: 700; }
+
+input, select {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  color: var(--encre);
+  background: #fff;
+  border: 2px solid var(--trait);
+  border-radius: var(--rayon);
+}
+input:focus, select:focus { border-color: var(--bleu); }
+input::placeholder { color: #8796AE; }
+
+.saisie-chiffres { font-variant-numeric: tabular-nums; letter-spacing: 0.12em; }
+.saisie-code { font-size: 1.9rem; font-weight: 700; letter-spacing: 0.45em; text-align: center; padding-left: 1.3rem; }
+
+.avec-bouton { position: relative; }
+.avec-bouton input { padding-right: 6rem; }
+.voir {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--bleu);
+  background: var(--ciel);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button { font: inherit; cursor: pointer; }
+.principal {
+  width: 100%;
+  min-height: 3.4rem;
+  margin-top: 0.4rem;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #fff;
+  background: var(--bleu);
+  border: 0;
+  border-radius: var(--rayon);
+}
+.principal:hover { background: var(--bleu-fonce); }
+.principal:disabled { opacity: 0.65; cursor: progress; }
+
+.lien {
+  padding: 0.2rem 0;
+  font-weight: 700;
+  color: var(--bleu);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lien-clair { color: #fff; font-weight: 400; }
+
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+.message { min-height: 1.5rem; margin: 0.75rem 0 0; }
+.message.erreur { color: var(--erreur); font-weight: 700; }
+.message.info { color: var(--encre); }
+.consigne.message { margin: 0 0 1.25rem; }
+.message.succes { color: var(--rhone); font-weight: 700; }
+
+.aide {
+  margin-top: 1.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid #E1E8F2;
+}
+.aide p { margin: 0 0 0.2rem; color: var(--gris); }
+
+/* ---------- Étapes de la première connexion ---------- */
+.etapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+  font-size: 0.85rem;
+  color: var(--gris);
+}
+.etapes li {
+  counter-increment: etape;
+  padding-top: 0.55rem;
+  border-top: 4px solid #DCE5F1;
+}
+.etapes li::before { content: counter(etape) ". "; font-weight: 700; }
+.etapes li.fait { border-top-color: var(--bleu); color: var(--encre); }
+.etapes li[aria-current="step"] { border-top-color: var(--orange); color: var(--encre); font-weight: 700; }
+
+/* ---------- Check-lists ---------- */
+.items { list-style: none; padding: 0; margin: 0 0 1rem; }
+.items li { border-bottom: 1px solid #E1E8F2; }
+.items label {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 3.5rem;
+  padding: 0.6rem 0.2rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+.items input {
+  width: 1.6rem;
+  min-height: 0;
+  height: 1.6rem;
+  flex-shrink: 0;
+  accent-color: var(--rhone);
+}
+
+/* ---------- Pied de page ---------- */
+.pied {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem max(1rem, env(safe-area-inset-bottom));
+  font-size: 0.85rem;
+  color: var(--gris);
+  background: #fff;
+}
+.pied p { margin: 0; line-height: 1.3; }
+.pied span { opacity: 0.8; }
+.logo-cha { height: 40px; width: auto; }
+
+/* ---------- Tablette ---------- */
+@media (min-width: 640px) {
+  .feuille { margin-top: -2rem; padding: 2.25rem 2.5rem; border-radius: 20px; margin-bottom: 1.5rem; }
+  .pied { background: none; }
+  body.connecte .feuille { max-width: 52rem; }
+  body.connecte .items { display: grid; grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+}
+
+/* ---------- Ordinateur et grand écran : panneau bleu à gauche pour la connexion ---------- */
+@media (min-width: 960px) {
+  body:not(.connecte) {
+    display: grid;
+    grid-template-columns: minmax(22rem, 1fr) minmax(30rem, 1.1fr);
+    grid-template-rows: 1fr auto;
+  }
+  body:not(.connecte) .bandeau {
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem;
+  }
+  body:not(.connecte) .marque { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  body:not(.connecte) .logo-smur { width: 160px; height: 160px; }
+  body:not(.connecte) .app-nom { font-size: 2.4rem; }
+  body:not(.connecte) .app-lieu { font-size: 1.15rem; }
+  body:not(.connecte) .ecg { bottom: 18%; height: 70px; opacity: 0.6; }
+  body:not(.connecte) .feuille { align-self: center; margin: 3rem auto 0; box-shadow: 0 10px 40px rgb(19 41 75 / 0.12); }
+
+  body.connecte .feuille { max-width: 72rem; }
+  body.connecte .items { grid-template-columns: 1fr 1fr 1fr; }
+  body.connecte .principal { width: auto; min-width: 18rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecg { animation: none; }
 }

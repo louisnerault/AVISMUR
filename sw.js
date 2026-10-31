@@ -1,5 +1,8 @@
-const CACHE = 'smur-pwa-v3';
-const FICHIERS = ['index.html', 'style.css', 'app.js', 'config.js', 'manifest.webmanifest'];
+const CACHE = 'smur-pwa-v4';
+const FICHIERS = [
+  'index.html', 'style.css', 'app.js', 'config.js', 'manifest.webmanifest',
+  'img/logo-smur.png', 'img/logo-cha.png', 'img/icon-192.png', 'img/icon-512.png',
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FICHIERS)));
