@@ -64,6 +64,72 @@ function afficherApplication(infos) {
     $('liste').value = infos.role;
   }
   afficherItems($('liste').value);
+  envoyerFileAttente();
+}
+
+// ---------- File d'attente hors ligne ----------
+// Chaque check-list est d'abord gardée sur l'appareil, puis envoyée au serveur.
+// Une entrée n'est retirée qu'après une réponse « ok » du serveur.
+const CLE_FILE = 'smur_file_attente';
+let envoiEnCours = false;
+
+const fileAttente = {
+  lire() {
+    try { return JSON.parse(localStorage.getItem(CLE_FILE)) || []; } catch (e) { return []; }
+  },
+  ecrire(elements) {
+    localStorage.setItem(CLE_FILE, JSON.stringify(elements));
+  },
+};
+
+function identifiantUnique() {
+  return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+/** Envoie les check-lists en attente, dans l'ordre de saisie. Relancée à chaque reconnexion. */
+async function envoyerFileAttente() {
+  if (envoiEnCours) return;
+  envoiEnCours = true;
+  let envoyees = 0;
+  let erreurServeur = '';
+  const refusees = new Set();
+  try {
+    let suivante;
+    while ((suivante = fileAttente.lire().find((e) => !refusees.has(e.id)))) {
+      let rep;
+      try {
+        rep = await appeler('saveChecklist', {
+          liste: suivante.liste,
+          items: suivante.items,
+          idSaisie: suivante.id,
+          dateSaisie: suivante.date,
+        });
+      } catch (err) {
+        break; // réseau coupé : on garde tout et on réessaiera au retour du réseau
+      }
+      if (rep.reconnecter) break; // session expirée : les entrées restent, envoyées après reconnexion
+      if (rep.ok) {
+        fileAttente.ecrire(fileAttente.lire().filter((e) => e.id !== suivante.id));
+        envoyees += 1;
+      } else {
+        refusees.add(suivante.id);
+        erreurServeur = rep.erreur || 'refus du serveur';
+      }
+    }
+  } finally {
+    envoiEnCours = false;
+  }
+  bilanEnvoi({ envoyees, restantes: fileAttente.lire().length, erreurServeur });
+}
+
+function bilanEnvoi({ envoyees, restantes, erreurServeur }) {
+  const pieces = [];
+  if (envoyees) pieces.push(`${envoyees} check-list(s) envoyée(s) au serveur.`);
+  if (restantes) pieces.push(`${restantes} check-list(s) gardée(s) sur cet appareil, en attente d'envoi.`);
+  if (erreurServeur) pieces.push(`Refusée par le serveur : ${erreurServeur}`);
+  if (!pieces.length) return;
+  $('statut').textContent = pieces.join(' ');
+  $('statut').className = erreurServeur ? 'message erreur' : (restantes ? 'message' : 'message succes');
 }
 
 /** Envoie une requête depuis un formulaire en gérant l'attente et les erreurs réseau. */
@@ -198,26 +264,29 @@ function lireCoches() {
 
 $('liste').addEventListener('change', (e) => afficherItems(e.target.value));
 
-$('enregistrer').addEventListener('click', async () => {
-  const liste = $('liste').value;
+$('enregistrer').addEventListener('click', () => {
+  try {
+    const elements = fileAttente.lire();
+    elements.push({ id: identifiantUnique(), liste: $('liste').value, items: lireCoches(), date: new Date().toISOString() });
+    fileAttente.ecrire(elements);
+  } catch (err) {
+    $('statut').textContent = 'Check-list non enregistrée : la mémoire de l\'appareil est pleine.';
+    $('statut').className = 'message erreur';
+    return;
+  }
   $('statut').textContent = 'Enregistrement…';
   $('statut').className = 'message';
-  try {
-    const rep = await appeler('saveChecklist', { liste, items: lireCoches() });
-    if (rep.reconnecter) return;
-    $('statut').textContent = rep.ok ? 'Check-list enregistrée.' : rep.erreur;
-    $('statut').className = rep.ok ? 'message succes' : 'message erreur';
-  } catch (err) {
-    $('statut').textContent = 'Check-list non enregistrée : le serveur ne répond pas. Vérifiez la connexion puis réessayez.';
-    $('statut').className = 'message erreur';
-  }
+  envoyerFileAttente();
 });
+
+window.addEventListener('online', () => envoyerFileAttente());
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* PWA hors ligne indisponible */ });
 }
 
 // Au chargement : reprendre la session si elle est encore valide.
+// Hors ligne, on reprend la session enregistrée sur l'appareil ; la saisie reste possible.
 (async () => {
   const actuelle = session.lire();
   if (!actuelle) return afficher('ecran-connexion');
@@ -225,6 +294,8 @@ if ('serviceWorker' in navigator) {
     const rep = await appeler('ping');
     if (rep.ok) afficherApplication(rep);
   } catch (err) {
-    afficher('ecran-connexion', ERREUR_RESEAU);
+    afficherApplication(actuelle);
+    $('statut').textContent = 'Mode hors ligne : les check-lists seront envoyées au retour du réseau.';
+    $('statut').className = 'message';
   }
 })();
