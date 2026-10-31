@@ -11,22 +11,35 @@
 <body>
   <header>
     <h1>Check-lists SMUR</h1>
-    <p class="avertissement">Prototype — données fictives</p>
+    <p class="avertissement">Prototype</p>
+    <p id="utilisateur" hidden>
+      <span id="nom-utilisateur"></span>
+      <button id="deconnexion" type="button" class="lien">Se déconnecter</button>
+    </p>
   </header>
 
   <main>
-    <section>
+    <form id="ecran-connexion" class="connexion">
+      <label for="identifiant">Nom et prénom</label>
+      <input id="identifiant" autocomplete="username" placeholder="NOM Prénom" required>
+      <label for="code">Code personnel</label>
+      <input id="code" type="password" autocomplete="current-password" autocapitalize="characters" required>
+      <button type="submit">Se connecter</button>
+      <p id="erreur-connexion" role="alert"></p>
+    </form>
+
+    <section id="ecran-checklist" hidden>
       <label for="liste">Liste</label>
       <select id="liste">
         <option value="ambulancier">Ambulancier</option>
         <option value="iade">IADE</option>
       </select>
+
+      <ul id="items" class="items"></ul>
+
+      <button id="enregistrer" type="button">Enregistrer</button>
+      <p id="statut" role="status"></p>
     </section>
-
-    <ul id="items" class="items"></ul>
-
-    <button id="enregistrer" type="button">Enregistrer</button>
-    <p id="statut" role="status"></p>
   </main>
 
   <script src="config.js"></script>

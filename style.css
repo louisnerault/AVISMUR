@@ -1,6 +1,7 @@
 /* Mobile d'abord, puis tablette, ordinateur et grand écran */
 :root { --bleu: #1d4ed8; --fond: #f5f7fb; --texte: #111827; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; font-family: system-ui, sans-serif; background: var(--fond); color: var(--texte); }
 header, main { padding: 1rem; max-width: 60rem; margin: 0 auto; }
 h1 { font-size: 1.4rem; margin: 0.5rem 0; }
@@ -11,6 +12,11 @@ select { width: 100%; padding: 0.75rem; font-size: 1rem; margin: 0.25rem 0 1rem;
 .items label { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; font-size: 1.05rem; min-height: 3rem; }
 .items input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; }
 button { width: 100%; padding: 1rem; font-size: 1.05rem; background: var(--bleu); color: #fff; border: 0; border-radius: 0.5rem; }
+.connexion { display: flex; flex-direction: column; gap: 0.25rem; max-width: 24rem; }
+.connexion input { padding: 0.75rem; font-size: 1rem; margin-bottom: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
+#erreur-connexion { color: #b91c1c; min-height: 1.5rem; }
+#utilisateur { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0 0; font-size: 0.95rem; }
+button.lien { width: auto; min-width: 0; padding: 0.25rem 0; background: none; color: var(--bleu); text-decoration: underline; }
 
 /* Tablette */
 @media (min-width: 640px) {
