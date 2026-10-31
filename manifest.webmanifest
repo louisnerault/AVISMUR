@@ -3,7 +3,7 @@
   "short_name": "SMUR",
   "description": "Vérifications du matin et traçabilité du SMUR d'Avignon",
   "lang": "fr",
-  "id": "/AVISMUR/",
+  "id": "/AVISMUR/app",
   "start_url": "/AVISMUR/",
   "scope": "/AVISMUR/",
   "display": "standalone",
