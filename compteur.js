@@ -66,8 +66,41 @@ const Compteur = (() => {
     for (let i = 0, j = 0; i < px.length; i += 4, j += 1) {
       gris[j] = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
     }
-    const tries = Uint8ClampedArray.from(gris).sort();
-    return { gris, tries, largeur, hauteur };
+    const net = { gris, tries: Uint8ClampedArray.from(gris).sort(), largeur, hauteur };
+    const doux = flouter(gris, largeur, hauteur, 2);
+    return { net, flou: { gris: doux, tries: Uint8ClampedArray.from(doux).sort(), largeur, hauteur } };
+  }
+
+  /**
+   * Flou léger (moyenne sur un carré de 5 pixels) : soude les points des afficheurs
+   * à matrice de points (chiffres jaunes sur fond rouge) en traits continus.
+   */
+  function flouter(gris, largeur, hauteur, rayon) {
+    const tmp = new Float32Array(gris.length);
+    const sortie = new Uint8ClampedArray(gris.length);
+    for (let y = 0; y < hauteur; y += 1) {
+      for (let x = 0; x < largeur; x += 1) {
+        let somme = 0;
+        let nb = 0;
+        for (let d = -rayon; d <= rayon; d += 1) {
+          const xx = x + d;
+          if (xx >= 0 && xx < largeur) { somme += gris[y * largeur + xx]; nb += 1; }
+        }
+        tmp[y * largeur + x] = somme / nb;
+      }
+    }
+    for (let y = 0; y < hauteur; y += 1) {
+      for (let x = 0; x < largeur; x += 1) {
+        let somme = 0;
+        let nb = 0;
+        for (let d = -rayon; d <= rayon; d += 1) {
+          const yy = y + d;
+          if (yy >= 0 && yy < hauteur) { somme += tmp[yy * largeur + x]; nb += 1; }
+        }
+        sortie[y * largeur + x] = somme / nb;
+      }
+    }
+    return sortie;
   }
 
   /**
@@ -95,8 +128,10 @@ const Compteur = (() => {
     return canvas;
   }
 
-  // Essais successifs : chiffres clairs (cas le plus courant), puis chiffres sombres.
-  const ESSAIS = [[true, 0.85], [true, 0.80], [true, 0.92], [false, 0.15], [false, 0.20]];
+  // Essais successifs [image, chiffres clairs, part] : image légèrement floutée d'abord
+  // (convient aux deux types d'afficheurs), puis nette, puis chiffres sombres.
+  const ESSAIS = [['flou', true, 0.85], ['flou', true, 0.80], ['net', true, 0.85], ['flou', true, 0.92],
+    ['flou', false, 0.15], ['net', false, 0.15]];
 
   /**
    * Nombre le plus vraisemblable dans le texte lu. Un compteur affiche 4 à 7 chiffres ;
@@ -209,10 +244,10 @@ const Compteur = (() => {
           const zone = grisDuCadre(video, cadre);
           const w = await preparerMoteur();
           let valeur = null;
-          let image = imageSeuil(zone, ESSAIS[0][0], ESSAIS[0][1]);
-          for (const [clairs, part] of ESSAIS) {
+          let image = imageSeuil(zone.flou, true, 0.85);
+          for (const [version, clairs, part] of ESSAIS) {
             if (fini) return;
-            const essai = imageSeuil(zone, clairs, part);
+            const essai = imageSeuil(zone[version], clairs, part);
             const v = choisirValeur((await w.recognize(essai)).data.text, precedent);
             if (v !== null && (valeur === null || plausible(v, precedent))) { valeur = v; image = essai; }
             if (plausible(valeur, precedent)) break;
