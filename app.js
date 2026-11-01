@@ -220,6 +220,7 @@ async function envoyerFileAttente() {
           items: suivante.items,
           vehicule: suivante.vehicule,
           modele: suivante.modele,
+          modeleBase: suivante.base,
           anomalies: suivante.anomalies,
           idSaisie: suivante.id,
           dateSaisie: suivante.date,
@@ -452,7 +453,7 @@ function enregistrerAmbulancier() {
     return;
   }
   const ok = mettreEnFile({
-    liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, items: saisie.reponses, anomalies: saisie.anomalies,
+    liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, base: saisie.base, items: saisie.reponses, anomalies: saisie.anomalies,
     agent: (session.lire() || {}).identifiant,
   });
   if (!ok) return;

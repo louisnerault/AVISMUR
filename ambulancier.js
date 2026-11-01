@@ -89,6 +89,9 @@ const Ambulancier = (() => {
   // Question « cette UMH fait-elle office de F00 ? » (absente si la configuration n'a plus ces modèles).
   const questionBascule = () => (MODELES.UMH && MODELES.F00 ? MODELES.UMH.questions.find((q) => q.basculeF00) || null : null);
 
+  /** Modèle d'origine (VML, UMH…) d'un véhicule, même s'il a une check-list propre. */
+  const baseDe = (v) => (MODELES[v.modele] && MODELES[v.modele].base) || v.modele;
+
   /**
    * Une UMH en DZ (qui fait office de F00) se vérifie avec la check-list F00.
    * L'état du parc du jour décide ; sans lui, on pose la question.
@@ -96,10 +99,10 @@ const Ambulancier = (() => {
   function modeleCourant() {
     const v = vehicule();
     if (!v) return null;
-    if (v.modele !== 'UMH' || !questionBascule()) return v.modele;
+    if (baseDe(v) !== 'UMH' || !questionBascule()) return v.modele;
     const position = positionDuJour(v.id);
-    if (position) return estDZ(position) ? 'F00' : 'UMH';
-    return etat.reponses[questionBascule().libelle] === 'OUI' ? 'F00' : 'UMH';
+    if (position) return estDZ(position) ? 'F00' : v.modele;
+    return etat.reponses[questionBascule().libelle] === 'OUI' ? 'F00' : v.modele;
   }
 
   function questionsCourantes() {
@@ -107,7 +110,7 @@ const Ambulancier = (() => {
     if (!modele || !MODELES[modele]) return [];
     const questions = MODELES[modele].questions;
     // Sans état du parc, la question « fait office de F00 » reste en tête pour pouvoir revenir en arrière.
-    const avecBascule = vehicule().modele === 'UMH' && modele === 'F00' && !positionDuJour(etat.vehicule);
+    const avecBascule = baseDe(vehicule()) === 'UMH' && modele === 'F00' && !positionDuJour(etat.vehicule);
     return avecBascule ? [questionBascule(), ...questions] : questions;
   }
 
@@ -117,7 +120,8 @@ const Ambulancier = (() => {
   const visible = (q) => q.type !== 'cache' && concerne(q)
     && !(q.basculeF00 && positionDuJour(etat.vehicule))
     && (!q.si || etat.reponses[q.si.question] === q.si.valeur);
-  const elementsDuGroupe = (g) => g.items.map((i) => (typeof i === 'string' ? { libelle: i } : i));
+  // Éléments d'une liste à cocher qui concernent ce véhicule (seulementPour / exclusPour par élément).
+  const elementsDuGroupe = (g) => g.items.map((i) => (typeof i === 'string' ? { libelle: i } : i)).filter(concerne);
   const cleElement = (g, i) => i.colonne || `${g.titre} [${i.libelle}]`;
 
   /** Libellés dont la réponse change les questions affichées. */
@@ -352,7 +356,8 @@ const Ambulancier = (() => {
         : 'État du parc non reçu : disponibilités et positions non affichées.';
     }
     const nom = nouvelId();
-    VEHICULES.forEach((v) => {
+    // Un véhicule désactivé par un administrateur n'apparaît plus.
+    VEHICULES.filter((v) => !v.inactif).forEach((v) => {
       const id = nouvelId();
       const idInfo = nouvelId();
       const etatV = etatVehicule(v);
@@ -405,7 +410,7 @@ const Ambulancier = (() => {
       titre.textContent = `${v.id} : pas de check-list pour le modèle ${v.modele}`;
       return;
     }
-    titre.textContent = v.modele === 'UMH' && modele === 'F00'
+    titre.textContent = baseDe(v) === 'UMH' && modele === 'F00'
       ? `${v.id} · en DZ, fait office de F00`
       : (v.nom ? v.nom : `${v.id} · ${MODELES[modele].titre}`);
     const position = positionDuJour(v.id);
@@ -525,7 +530,10 @@ const Ambulancier = (() => {
     });
     const position = positionDuJour(v.id);
     if (position) reponses['Position (état du parc)'] = position.position;
-    return { vehicule: v.id, modele: modeleCourant(), reponses, erreurs, manquants, anomalies: anomalies(reponses, manquants) };
+    const modele = modeleCourant();
+    return {
+      vehicule: v.id, modele, base: MODELES[modele].base || modele, reponses, erreurs, manquants, anomalies: anomalies(reponses, manquants),
+    };
   }
 
   /** Textes affichés en orange : éléments manquants, niveaux bas, AdBlue, remarque. */

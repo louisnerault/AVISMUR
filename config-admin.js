@@ -68,7 +68,12 @@ const ConfigAdmin = (() => {
     brouillon.vehicules.forEach((v, i) => {
       const modele = el('select', { 'aria-label': `Modèle de ${v.id}`, surchange: (e) => { v.modele = e.target.value; } },
         ...Object.keys(brouillon.modeles).map((m) => el('option', { value: m, texte: brouillon.modeles[m].titre || m, selected: m === v.modele })));
-      table.append(el('div', { classe: 'cfg-ligne' },
+      const idActif = id();
+      table.append(el('div', { classe: `cfg-ligne${v.inactif ? ' cfg-inactif' : ''}` },
+        el('label', { classe: 'cfg-actif', for: idActif, title: 'Décocher pour ne plus afficher ce véhicule' },
+          el('input', { type: 'checkbox', id: idActif, checked: !v.inactif,
+            surchange: (e) => { if (e.target.checked) delete v.inactif; else v.inactif = true; rendre(); } }),
+          el('span', { texte: 'Actif' })),
         el('input', { classe: 'cfg-indicatif', valeur: v.id, 'aria-label': 'Indicatif', placeholder: 'F27',
           surinput: (e) => { v.id = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); e.target.value = v.id; } }),
         modele,
@@ -82,7 +87,7 @@ const ConfigAdmin = (() => {
     });
     return el('section', { classe: 'cfg-section' },
       el('h2', { texte: 'Véhicules' }),
-      el('p', { classe: 'aide-question', texte: 'Indicatif, modèle de check-list, nom affiché et icône (facultatifs). L\'ordre est celui des cases dans l\'appli.' }),
+      el('p', { classe: 'aide-question', texte: 'Indicatif, modèle de check-list, nom affiché et icône (facultatifs). L\'ordre est celui des cases dans l\'appli. Un véhicule décoché (« Actif ») n\'apparaît plus, sans perdre sa configuration.' }),
       table,
       bouton('+ Ajouter un véhicule', () => {
         brouillon.vehicules.push({ id: '', modele: Object.keys(brouillon.modeles)[0] });
@@ -90,6 +95,86 @@ const ConfigAdmin = (() => {
         const champs = zone.querySelectorAll('.cfg-indicatif');
         champs[champs.length - 1].focus();
       }));
+  }
+
+  // ---------- Questions véhicule par véhicule ----------
+  let vehiculeOuvert = null;
+
+  /** La question (ou l'élément) est-elle posée pour ce véhicule ? */
+  const posee = (q, idV) => (!q.seulementPour || q.seulementPour.includes(idV)) && !(q.exclusPour || []).includes(idV);
+
+  /** Pose ou retire la question (ou l'élément) pour ce véhicule, sans toucher aux autres. */
+  function basculer(q, idV, oui) {
+    if (oui) {
+      if (q.exclusPour) { q.exclusPour = q.exclusPour.filter((x) => x !== idV); if (!q.exclusPour.length) delete q.exclusPour; }
+      if (q.seulementPour && !q.seulementPour.includes(idV)) q.seulementPour.push(idV);
+    } else if (q.seulementPour) {
+      q.seulementPour = q.seulementPour.filter((x) => x !== idV);
+      if (!q.seulementPour.length) q.exclusPour = [...new Set([...(q.exclusPour || []), idV])];
+      if (!q.seulementPour.length) delete q.seulementPour;
+    } else {
+      q.exclusPour = [...new Set([...(q.exclusPour || []), idV])];
+    }
+  }
+
+  function caseQuestion(objet, idV, texte, classe = '') {
+    const i = id();
+    return el('label', { classe: `cfg-case ${classe}`.trim(), for: i },
+      el('input', { type: 'checkbox', id: i, checked: posee(objet, idV), surchange: (e) => basculer(objet, idV, e.target.checked) }),
+      el('span', { texte }));
+  }
+
+  function rendreParVehicule() {
+    const vehicules = brouillon.vehicules.filter((v) => v.id);
+    if (!vehicules.some((v) => v.id === vehiculeOuvert)) vehiculeOuvert = vehicules.length ? vehicules[0].id : null;
+    const section = el('section', { classe: 'cfg-section' },
+      el('h2', { texte: 'Par véhicule' }),
+      el('p', { classe: 'aide-question', texte: 'Cochez les questions et les éléments vérifiés sur ce véhicule. Décocher ne change rien pour les autres véhicules du même modèle.' }));
+    if (!vehiculeOuvert) return section;
+    const v = brouillon.vehicules.find((x) => x.id === vehiculeOuvert);
+    const m = brouillon.modeles[v.modele];
+    section.append(el('div', { classe: 'champ' },
+      el('label', { for: 'cfg-vehicule', texte: 'Véhicule' }),
+      el('select', { id: 'cfg-vehicule', surchange: (e) => { vehiculeOuvert = e.target.value; rendre(); } },
+        ...vehicules.map((x) => el('option', { value: x.id, texte: `${x.nom || x.id} — ${brouillon.modeles[x.modele] ? brouillon.modeles[x.modele].titre || x.modele : x.modele}${x.inactif ? ' (désactivé)' : ''}`, selected: x.id === vehiculeOuvert })))));
+    if (!m) return section;
+
+    const partages = brouillon.vehicules.filter((x) => x.modele === v.modele).map((x) => x.id);
+    section.append(el('p', { classe: 'aide-question', texte: partages.length > 1
+      ? `Check-list « ${m.titre || v.modele} », partagée avec ${partages.filter((x) => x !== v.id).join(', ')}. Pour modifier les libellés ou ajouter des questions à ce seul véhicule, créez-lui sa propre check-list.`
+      : `Check-list « ${m.titre || v.modele} », propre à ce véhicule : modifiable dans « Check-lists » ci-dessous.` }));
+
+    m.questions.forEach((q) => {
+      if (!TYPES[q.type] || q.basculeF00) return;
+      const bloc = el('div', { classe: 'cfg-question' }, caseQuestion(q, v.id, q.type === 'groupe' ? q.titre : q.libelle, 'cfg-titre-case'));
+      if (q.type === 'groupe') {
+        const sous = el('div', { classe: 'cfg-elements' });
+        q.items.forEach((it, k) => {
+          if (typeof it === 'string') q.items[k] = { libelle: it }; // objet pour pouvoir le restreindre
+          sous.append(caseQuestion(q.items[k], v.id, q.items[k].libelle));
+        });
+        bloc.append(sous);
+      }
+      section.append(bloc);
+    });
+
+    if (partages.length > 1) {
+      section.append(el('div', { classe: 'cfg-ligne' }, bouton(`Créer une check-list propre à ${v.id}`, () => {
+        let nom = `${v.id}`.replace(/[^A-Z0-9_]/g, '');
+        while (brouillon.modeles[nom]) nom += '_';
+        const copieModele = copie(m);
+        copieModele.titre = m.titre || v.modele;
+        // Modèle d'origine : la copie vers l'ancien Sheet continue dans le bon onglet (VML, UMH…).
+        copieModele.base = m.base || v.modele;
+        // La copie ne garde que ce qui concerne ce véhicule.
+        copieModele.questions = copieModele.questions.filter((q) => posee(q, v.id) || q.sinon !== undefined || q.type === 'cache');
+        brouillon.modeles[nom] = copieModele;
+        v.modele = nom;
+        modeleOuvert = nom;
+        rendre();
+      })));
+    }
+    return section;
   }
 
   // ---------- Questions d'un modèle ----------
@@ -200,6 +285,7 @@ const ConfigAdmin = (() => {
       el('p', { classe: 'consigne', texte: 'Véhicules et questions de la check-list ambulancier. Les modifications s\'appliquent à tous les appareils après « Enregistrer ».' }),
       el('p', { classe: 'note-parc', texte: 'Le libellé d\'une question sert aussi de nom de colonne dans l\'ancien Sheet « Check-list journalière ». Le renommer coupe la copie de cette réponse vers l\'onglet du jour.' }),
       rendreVehicules(),
+      rendreParVehicule(),
       rendreModele(),
       el('div', { classe: 'cfg-actions' },
         bouton('Enregistrer la configuration', enregistrer, 'principal'),
