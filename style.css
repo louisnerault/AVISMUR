@@ -971,3 +971,23 @@ body.connecte.parc-ouvert .feuille { max-width: 108rem; }
 .parc-km td:last-child { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; }
 .parc-barre-km { display: inline-block; width: calc(var(--part) * 12rem); height: 0.7rem; border-radius: 3px; background: var(--bleu); }
 .parc-resultats .historique { max-width: 52rem; }
+
+/* ---------- Check-list avec anomalies : bleu (au lieu d'orange) + triangle orange ---------- */
+.vehicule.anomalie, .puces-vehicules input:checked + label.vehicule.anomalie,
+.parc-th-bouton.anomalie, .parc-etat.anomalie, .tuile-pastille.anomalie, .parc-jour.anomalie {
+  background-color: #E3EDFA; border-color: var(--bleu);
+}
+.vehicule.anomalie .pastille-etat, .parc-verifs .pastille-etat.anomalie, .pastille-etat.anomalie { background: var(--bleu); }
+.avertissement { display: inline-flex; flex-shrink: 0; }
+.picto-avertissement { width: 1.15rem; height: 1.15rem; }
+.picto-avertissement .fond { fill: var(--orange); stroke: var(--orange); stroke-width: 1.5; stroke-linejoin: round; }
+.picto-avertissement .signe { stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+.picto-avertissement .point { fill: #fff; }
+
+/* Nettoyages du jour : gris si pas fait, vert si fait */
+.carte-nettoyage { gap: 0.6rem; }
+.nettoyage-picto { display: inline-flex; padding: 0.15rem; border-radius: 6px; color: #9AA6B8; background: rgb(19 41 75 / 0.06); }
+.nettoyage-picto.fait { color: var(--rhone); background: #DDF3EF; }
+.picto-nettoyage { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.picto-nettoyage .plein { fill: currentColor; fill-opacity: 0.25; }
+.picto-nettoyage .croix { stroke-width: 1.8; }

@@ -323,6 +323,24 @@ const Ambulancier = (() => {
     }
   }
 
+  /** Triangle d'avertissement (anomalies). */
+  const triangle = () => el('svg:svg', { viewBox: '0 0 24 24', classe: 'picto-avertissement', 'aria-hidden': 'true' },
+    el('svg:path', { d: 'M12 2.5 L23 21.5 H1 Z', classe: 'fond' }),
+    el('svg:path', { d: 'M12 9 V14.5', classe: 'signe' }), el('svg:circle', { cx: 12, cy: 18, r: 1.4, classe: 'point' }));
+
+  /** Spray désinfectant (nettoyage intérieur). */
+  const spray = () => el('svg:svg', { viewBox: '0 0 24 24', classe: 'picto-nettoyage', 'aria-hidden': 'true' },
+    el('svg:path', { d: 'M8 10 h7 a1 1 0 0 1 1 1 v10 a1 1 0 0 1 -1 1 h-7 a1 1 0 0 1 -1 -1 v-10 a1 1 0 0 1 1 -1 z', classe: 'plein' }),
+    el('svg:path', { d: 'M9.5 10 V6.5 h4 V10 M9.5 6.5 h-2.5 V4.5 h7 l1 2' }),
+    el('svg:path', { d: 'M18 3.5 l2 -1 M18 5.5 h2.5 M18 7.5 l2 1', classe: 'jet' }),
+    el('svg:path', { d: 'M9.5 15 h4 M11.5 13 v4', classe: 'croix' }));
+
+  /** Tuyau d'arrosage avec jet d'eau (nettoyage extérieur). */
+  const tuyau = () => el('svg:svg', { viewBox: '0 0 24 24', classe: 'picto-nettoyage', 'aria-hidden': 'true' },
+    el('svg:path', { d: 'M2 21 c4 0 4 -4 8 -4 c2.5 0 3 -2 3 -3.5' }),
+    el('svg:path', { d: 'M11 13.5 l1.5 -3 h3.5 l1 2 l-2 1.5 z', classe: 'plein' }),
+    el('svg:path', { d: 'M17.5 11 c1.5 -1 3 -1 4.5 -0.5 M17 9 c1.5 -2 3.5 -2.5 5 -2 M16 7.5 c0.5 -2 2 -3.5 4 -4', classe: 'jet' }));
+
   /** Pictogramme pompe à essence (plein à faire). */
   const pompe = () => el('svg:svg', { viewBox: '0 0 24 24', classe: 'picto-pompe', 'aria-hidden': 'true' },
     el('svg:path', { d: 'M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16z', classe: 'plein' }),
@@ -434,9 +452,29 @@ const Ambulancier = (() => {
       if (etatV.statut.anomalies.length) texteCL += ` · ${etatV.statut.anomalies.length} anomalie${etatV.statut.anomalies.length > 1 ? 's' : ''}`;
     }
     if (texteCL) {
-      const ligneCL = el('span', { classe: 'carte-ligne carte-cl' }, el('span', { classe: 'pastille-etat', 'aria-hidden': 'true' }), el('span', { texte: texteCL }));
+      const nbAnomalies = etatV.statut ? etatV.statut.anomalies.length : 0;
+      const ligneCL = el('span', { classe: 'carte-ligne carte-cl' }, el('span', { classe: 'pastille-etat', 'aria-hidden': 'true' }),
+        // Anomalies : triangle d'avertissement orange
+        nbAnomalies ? el('span', { classe: 'avertissement', title: `${nbAnomalies} anomalie(s)` }, triangle()) : null,
+        el('span', { texte: texteCL }));
       if (Object.keys(brouillons.lire(v.id)).length) ligneCL.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
       bouton.append(ligneCL);
+    }
+
+    // Nettoyages du jour : spray (intérieur) et tuyau d'arrosage (extérieur), verts si faits, gris sinon
+    if (etatV.classe !== 'indispo') {
+      const aujourdhuiFait = (n) => Boolean(n) && new Date(n.date).toLocaleDateString('fr-CA') === aujourdhui();
+      const interieur = aujourdhuiFait(info.dernierNettoyageInterieur)
+        || Boolean(etatV.statut && etatV.statut.reponses && etatV.statut.reponses['Entretien quotidien'] === 'Fait');
+      const exterieur = aujourdhuiFait(info.dernierNettoyageExterieur);
+      const ligne = el('span', { classe: 'carte-ligne carte-nettoyage' },
+        el('span', { classe: `nettoyage-picto${interieur ? ' fait' : ''}`, title: interieur ? 'Nettoyage intérieur fait aujourd\'hui' : 'Nettoyage intérieur pas fait aujourd\'hui' },
+          spray(), el('span', { classe: 'invisible', texte: interieur ? 'Nettoyage intérieur fait' : 'Nettoyage intérieur à faire' })));
+      if (!v.sansExterieur) {
+        ligne.append(el('span', { classe: `nettoyage-picto${exterieur ? ' fait' : ''}`, title: exterieur ? 'Nettoyage extérieur fait aujourd\'hui' : 'Nettoyage extérieur pas fait aujourd\'hui' },
+          tuyau(), el('span', { classe: 'invisible', texte: exterieur ? 'Nettoyage extérieur fait' : 'Nettoyage extérieur à faire' })));
+      }
+      bouton.append(ligne);
     }
 
     // Carburant : petit cadran à aiguille
