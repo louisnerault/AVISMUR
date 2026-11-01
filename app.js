@@ -101,6 +101,7 @@ async function envoyerFileAttente() {
   envoiEnCours = true;
   let envoyees = 0;
   let erreurServeur = '';
+  let avertissement = '';
   const refusees = new Set();
   try {
     let suivante;
@@ -123,6 +124,7 @@ async function envoyerFileAttente() {
       if (rep.ok) {
         fileAttente.ecrire(fileAttente.lire().filter((e) => e.id !== suivante.id));
         envoyees += 1;
+        if (rep.avertissement) avertissement = rep.avertissement;
       } else {
         refusees.add(suivante.id);
         erreurServeur = rep.erreur || 'refus du serveur';
@@ -132,17 +134,19 @@ async function envoyerFileAttente() {
     envoiEnCours = false;
   }
   if (envoyees) chargerReleves();
-  bilanEnvoi({ envoyees, restantes: fileAttente.lire().length, erreurServeur });
+  bilanEnvoi({ envoyees, restantes: fileAttente.lire().length, erreurServeur, avertissement });
 }
 
-function bilanEnvoi({ envoyees, restantes, erreurServeur }) {
+function bilanEnvoi({ envoyees, restantes, erreurServeur, avertissement }) {
   const pieces = [];
   if (envoyees) pieces.push(`${envoyees} check-list(s) envoyée(s) au serveur.`);
   if (restantes) pieces.push(`${restantes} check-list(s) gardée(s) sur cet appareil, en attente d'envoi.`);
   if (erreurServeur) pieces.push(`Refusée par le serveur : ${erreurServeur}`);
+  // Check-list bien enregistrée, mais l'ancien Sheet n'a pas suivi : à signaler à l'administrateur.
+  if (avertissement) pieces.push(`Attention : ${avertissement}.`);
   if (!pieces.length) return;
   $('statut').textContent = pieces.join(' ');
-  $('statut').className = erreurServeur ? 'message erreur' : (restantes ? 'message' : 'message succes');
+  $('statut').className = erreurServeur || avertissement ? 'message erreur' : (restantes ? 'message' : 'message succes');
 }
 
 /** Envoie une requête depuis un formulaire en gérant l'attente et les erreurs réseau. */
