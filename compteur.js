@@ -40,8 +40,11 @@ const Compteur = (() => {
     return chargement;
   }
 
-  /** Niveaux de gris du cadre de visée, agrandis à une hauteur fixe. */
-  function grisDuCadre(video, cadre) {
+  /**
+   * Niveaux de gris du cadre de visée, ramenés à une hauteur donnée puis légèrement floutés.
+   * Réduire l'image fond les points des afficheurs à matrice de points en traits continus.
+   */
+  function grisDuCadre(video, cadre, hauteur, rayon) {
     const vr = video.getBoundingClientRect();
     const cr = cadre.getBoundingClientRect();
     // La vidéo remplit l'écran en « cover » : on retrouve la zone correspondante dans l'image source.
@@ -53,7 +56,6 @@ const Compteur = (() => {
     const sw = cr.width / echelle;
     const sh = cr.height / echelle;
 
-    const hauteur = 160;
     const largeur = Math.round((sw / sh) * hauteur);
     const canvas = document.createElement('canvas');
     canvas.width = largeur;
@@ -66,9 +68,8 @@ const Compteur = (() => {
     for (let i = 0, j = 0; i < px.length; i += 4, j += 1) {
       gris[j] = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
     }
-    const net = { gris, tries: Uint8ClampedArray.from(gris).sort(), largeur, hauteur };
-    const doux = flouter(gris, largeur, hauteur, 2);
-    return { net, flou: { gris: doux, tries: Uint8ClampedArray.from(doux).sort(), largeur, hauteur } };
+    const final = rayon ? flouter(gris, largeur, hauteur, rayon) : gris;
+    return { gris: final, tries: Uint8ClampedArray.from(final).sort(), largeur, hauteur };
   }
 
   /**
@@ -128,10 +129,13 @@ const Compteur = (() => {
     return canvas;
   }
 
-  // Essais successifs [image, chiffres clairs, part] : image légèrement floutée d'abord
-  // (convient aux deux types d'afficheurs), puis nette, puis chiffres sombres.
-  const ESSAIS = [['flou', true, 0.85], ['flou', true, 0.80], ['net', true, 0.85], ['flou', true, 0.92],
-    ['flou', false, 0.15], ['net', false, 0.15]];
+  // Essais successifs [hauteur, flou, chiffres clairs, part]. Testés sur des photos de
+  // compteurs du SMUR : la petite taille lit les deux types d'afficheurs (classique et à
+  // matrice de points) ; les autres réglages servent de secours.
+  const ESSAIS = [
+    [60, 1, true, 0.85], [90, 2, true, 0.85], [60, 0, true, 0.85], [160, 2, true, 0.85],
+    [60, 1, true, 0.80], [60, 1, false, 0.15], [90, 2, false, 0.15],
+  ];
 
   /**
    * Nombre le plus vraisemblable dans le texte lu. Un compteur affiche 4 à 7 chiffres ;
@@ -195,6 +199,7 @@ const Compteur = (() => {
       let minuterie = null;
       let occupe = false;
       let derniere = null;
+      let repetitions = 0;
       let fini = false;
 
       function nettoyer() {
@@ -241,23 +246,38 @@ const Compteur = (() => {
         if (occupe || fini || !video.videoWidth) return;
         occupe = true;
         try {
-          const zone = grisDuCadre(video, cadre);
           const w = await preparerMoteur();
+          const zones = {};
+          const lectures = []; // [valeur, image]
           let valeur = null;
-          let image = imageSeuil(zone.flou, true, 0.85);
-          for (const [version, clairs, part] of ESSAIS) {
+          let image = null;
+          for (const [hauteur, rayon, clairs, part] of ESSAIS) {
             if (fini) return;
-            const essai = imageSeuil(zone[version], clairs, part);
+            const cle = `${hauteur}-${rayon}`;
+            if (!zones[cle]) zones[cle] = grisDuCadre(video, cadre, hauteur, rayon);
+            const essai = imageSeuil(zones[cle], clairs, part);
+            if (!image) image = essai;
             const v = choisirValeur((await w.recognize(essai)).data.text, precedent);
-            if (v !== null && (valeur === null || plausible(v, precedent))) { valeur = v; image = essai; }
-            if (plausible(valeur, precedent)) break;
+            if (v === null) continue;
+            lectures.push([v, essai]);
+            if (plausible(v, precedent)) { valeur = v; image = essai; break; }
+          }
+          // Aucune lecture cohérente avec le dernier relevé : on retient la plus fréquente.
+          if (valeur === null && lectures.length) {
+            const compte = {};
+            lectures.forEach(([v]) => { compte[v] = (compte[v] || 0) + 1; });
+            const [gagnante] = lectures.reduce((a, b) => (compte[b[0]] > compte[a[0]] ? b : a));
+            valeur = gagnante;
+            image = lectures.find(([v]) => v === gagnante)[1];
           }
           if (fini) return;
           if (manuel) {
             confirmer(valeur, image);
-          } else if (plausible(valeur, precedent) && valeur === derniere) {
-            confirmer(valeur, image); // même valeur lue deux fois de suite : on la retient
+          } else if (valeur !== null && valeur === derniere && (plausible(valeur, precedent) || repetitions >= 2)) {
+            // Même valeur lue deux fois de suite (trois si elle ne suit pas le dernier relevé) : on la retient.
+            confirmer(valeur, image);
           } else {
+            repetitions = valeur !== null && valeur === derniere ? repetitions + 1 : 1;
             derniere = valeur;
             etat.textContent = valeur === null ? 'Recherche du compteur…' : `Lu : ${valeur.toLocaleString('fr-FR')} km…`;
           }
