@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="130 385 1900 950" preserveAspectRatio="none">
+<defs>
+    <linearGradient id="carro" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#f2f4f6"/><stop offset="1" stop-color="#d9dde2"/>
+    </linearGradient>
+    <linearGradient id="vitre" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#55626e"/><stop offset="0.5" stop-color="#2a323b"/><stop offset="1" stop-color="#1a1f25"/>
+    </linearGradient>
+    <radialGradient id="jante" cx="0.45" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#eef1f4"/><stop offset="1" stop-color="#9aa2ac"/>
+    </radialGradient>
+    <g id="roue">
+      <circle r="118" fill="#1b1c1e"/>
+      <circle r="112" fill="none" stroke="#2c2e31" stroke-width="5"/>
+      <circle r="80" fill="url(#jante)" stroke="#6f7782" stroke-width="3"/>
+      <circle r="62" fill="#3a3f46"/>
+      <g fill="#c9ced5" stroke="#7d858f" stroke-width="1.5">
+        <path id="b" d="M -7 -14 L -10 -76 L 4 -77 L 8 -14 Z"/>
+        <use href="#b" transform="rotate(36)"/><use href="#b" transform="rotate(72)"/><use href="#b" transform="rotate(108)"/>
+        <use href="#b" transform="rotate(144)"/><use href="#b" transform="rotate(180)"/><use href="#b" transform="rotate(216)"/>
+        <use href="#b" transform="rotate(252)"/><use href="#b" transform="rotate(288)"/><use href="#b" transform="rotate(324)"/>
+      </g>
+      <circle r="20" fill="#d7dce2" stroke="#6b737d" stroke-width="2"/>
+      <path d="M -9 -3 L 0 -9 L 9 -3 M -9 4 L 0 -2 L 9 4" stroke="#5b636d" stroke-width="2.5" fill="none"/>
+    </g>
+  </defs>
+<g transform="translate(2160 0) scale(-1 1)">
+  <ellipse cx="1080" cy="1218" rx="900" ry="10" fill="#000" opacity="0.18"/>
+  <!-- intérieur des passages de roue -->
+  <circle cx="385" cy="1100" r="138" fill="#232528"/>
+  <circle cx="1610" cy="1095" r="138" fill="#232528"/>
+  <!-- carrosserie -->
+  <path id="corps" fill="url(#carro)" stroke="#3a3f45" stroke-width="3" stroke-linejoin="round"
+    d="M 178 1112 L 166 1062 Q 156 985 166 905 Q 174 848 205 812 Q 320 768 470 716
+       Q 600 610 700 552 Q 730 537 790 535 L 1895 527 Q 1938 527 1953 560
+       Q 1974 640 1984 760 L 1995 985 Q 2006 1060 1996 1102 L 1984 1124 L 1748 1124
+       A 138 138 0 0 0 1472 1112 L 523 1126 A 138 138 0 0 0 247 1112 Z"/>
+  <!-- pare-brise vu de profil + montant -->
+  <path d="M 476 714 Q 600 612 700 556 L 708 562 Q 630 640 556 738 Z" fill="#2b3239"/>
+  <!-- boucliers / bas de caisse -->
+  <path d="M 166 1040 Q 200 1048 262 1046 L 247 1112 L 178 1112 Z" fill="#2a2d31"/>
+  <path d="M 1752 1124 L 1984 1124 L 1996 1102 Q 1999 1092 1999 1084 L 1756 1096 Z" fill="#2a2d31"/>
+  <path d="M 523 1126 L 1472 1112 L 1474 1100 L 528 1112 Z" fill="#b8bec6"/>
+  <!-- vitres -->
+  <path d="M 548 792 Q 605 690 692 595 Q 708 578 735 576 L 903 576 Q 918 576 918 592 L 918 776 Q 918 792 902 792 Z" fill="url(#vitre)" stroke="#15191d" stroke-width="3"/>
+  <rect x="985" y="560" width="415" height="210" rx="22" fill="url(#vitre)" stroke="#15191d" stroke-width="3"/>
+  <path d="M 1425 560 L 1845 556 Q 1876 557 1873 592 L 1866 712 Q 1862 744 1832 744 L 1425 748 Z" fill="url(#vitre)" stroke="#15191d" stroke-width="3"/>
+  <g fill="#ffffff" opacity="0.13">
+    <path d="M 640 760 L 760 590 L 800 590 L 690 760 Z"/>
+    <path d="M 1040 760 L 1150 568 L 1200 568 L 1095 760 Z"/>
+    <path d="M 1500 740 L 1600 562 L 1650 562 L 1555 740 Z"/>
+  </g>
+  <!-- joints de portes et lignes de caisse -->
+  <g fill="none" stroke="#4a5058" stroke-width="2.5">
+    <path d="M 492 752 L 506 900 Q 518 1000 540 1124"/>
+    <path d="M 946 545 L 946 1124"/>
+    <path d="M 1409 545 L 1409 1114"/>
+    <path d="M 1962 600 Q 1975 780 1978 1000"/>
+    <path d="M 1416 782 L 1828 778"/>
+  </g>
+  <g fill="none" stroke="#b9c0c8" stroke-width="2">
+    <path d="M 215 840 Q 600 832 1960 820"/>
+    <path d="M 262 1046 Q 700 1052 1755 1060"/>
+    <path d="M 230 800 Q 330 765 470 720"/>
+  </g>
+  <!-- poignées -->
+  <rect x="832" y="828" width="64" height="15" rx="7" fill="#e3e6ea" stroke="#5a6068" stroke-width="2"/>
+  <rect x="985" y="826" width="70" height="15" rx="7" fill="#e3e6ea" stroke="#5a6068" stroke-width="2"/>
+  <!-- trappe à carburant -->
+  <circle cx="368" cy="828" r="14" fill="none" stroke="#9aa1aa" stroke-width="2"/>
+  <!-- rétroviseur -->
+  <path d="M 560 740 L 588 762" stroke="#25282c" stroke-width="10"/>
+  <path d="M 528 712 Q 556 702 566 722 L 570 772 Q 566 790 540 788 Q 514 784 514 760 Z" fill="#eceef1" stroke="#3a3f45" stroke-width="3"/>
+  <!-- optiques -->
+  <path d="M 182 868 Q 215 822 285 812 L 278 852 Q 232 862 192 888 Z" fill="#dce7f3" stroke="#2d3238" stroke-width="3"/>
+  <path d="M 200 866 Q 230 836 270 830" stroke="#8fa3b8" stroke-width="4" fill="none"/>
+  <path d="M 1966 772 L 1984 768 L 1992 925 L 1974 928 Z" fill="#b3121d" stroke="#3b1013" stroke-width="2"/>
+  <!-- rampe lumineuse et antenne -->
+  <rect x="962" y="500" width="112" height="30" rx="6" fill="#3f7fd9" stroke="#1f3f70" stroke-width="2.5"/>
+  <rect x="1000" y="505" width="36" height="20" rx="3" fill="#cfd7e2"/>
+  <path d="M 790 535 L 815 470" stroke="#25282c" stroke-width="4"/>
+  <use href="#roue" x="385" y="1100"/>
+  <use href="#roue" x="1610" y="1095"/>
+</g>
+</svg>

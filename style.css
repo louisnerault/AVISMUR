@@ -767,6 +767,7 @@ body.fenetre-ouverte { overflow: hidden; }
 .schema-cote { width: 100%; aspect-ratio: 2 / 1; }
 .schema-face { width: min(100%, 22rem); aspect-ratio: 6 / 5; }
 .silhouette { position: absolute; inset: 0; width: 100%; height: 100%; }
+.silhouette.calque { pointer-events: none; user-select: none; -webkit-user-drag: none; }
 .silhouette .carrosserie { fill: #F4F7FB; stroke: var(--encre); stroke-width: 1.5; }
 .silhouette .vitre { fill: #CFE0F3; stroke: var(--encre); stroke-width: 1; }
 .silhouette .bande { fill: none; stroke: var(--orange); stroke-width: 3; }

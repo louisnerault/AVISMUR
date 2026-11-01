@@ -256,8 +256,14 @@ const Actions = (() => {
   // ---------- Vérification extérieure ----------
   const FACES = { gauche: 'Côté gauche', droite: 'Côté droit', avant: 'Avant', arriere: 'Arrière' };
 
-  /** Silhouette simple du véhicule, vue de la face demandée (repère 0..1 pour les défauts). */
-  function silhouette(face) {
+  // Calques dessinés d'après photos, par véhicule (img/vues/<calque>_<face>.svg). Les proportions
+  // des fichiers correspondent aux cadres .schema-cote (2:1) et .schema-face (6:5).
+  const CALQUES = { F21: 'jumpy', F22: 'jumpy' };
+
+  /** Silhouette du véhicule, vue de la face demandée (repère 0..1 pour les défauts). */
+  function silhouette(face, v) {
+    const calque = v && CALQUES[v.id];
+    if (calque) return el('img', { src: `img/vues/${calque}_${face}.svg`, alt: '', classe: 'silhouette calque', draggable: 'false' });
     const s = el('svg:svg', { viewBox: face === 'gauche' || face === 'droite' ? '0 0 200 100' : '0 0 120 100', classe: 'silhouette', 'aria-hidden': 'true' });
     const trait = (d, classe = '') => s.append(el('svg:path', { d, classe }));
     if (face === 'gauche' || face === 'droite') {
@@ -304,7 +310,7 @@ const Actions = (() => {
           texte: nb ? `${libelle} (${nb})` : libelle, surclick: () => { face = f; rendre(); } }));
       });
 
-      const zone = el('div', { classe: `schema schema-${face === 'gauche' || face === 'droite' ? 'cote' : 'face'}` }, silhouette(face));
+      const zone = el('div', { classe: `schema schema-${face === 'gauche' || face === 'droite' ? 'cote' : 'face'}` }, silhouette(face, v));
       const placer = (d, numero, classe, action) => {
         zone.append(el('button', { type: 'button', classe: `marque ${classe}`, style: `left:${d.x * 100}%;top:${d.y * 100}%`,
           'aria-label': `Défaut ${numero}${d.commentaire ? ` : ${d.commentaire}` : ''}`, texte: String(numero), surclick: (e) => { e.stopPropagation(); action(); } }));
