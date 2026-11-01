@@ -388,11 +388,22 @@ function afficherListe(liste) {
   $('zone-ambulancier').hidden = liste !== 'ambulancier';
   $('items').hidden = liste === 'ambulancier' || config;
   $('zone-config').hidden = !config;
-  document.querySelector('.envoi').hidden = config;
+  majBarreEnvoi();
   if (config) ConfigAdmin.ouvrir();
   else if (liste === 'ambulancier') Ambulancier.afficher();
   else afficherItems(liste);
   annulerConfirmation();
+}
+
+/**
+ * Barre « Enregistrer la check-list » : seulement quand une check-list est ouverte
+ * (véhicule choisi, ou check-list IADE). Jamais sur l'écran de configuration.
+ */
+function majBarreEnvoi() {
+  const liste = $('liste').value;
+  const visible = !$('ecran-checklist').hidden && liste !== 'config' && $('vue-plus').hidden
+    && (liste !== 'ambulancier' || Boolean(Ambulancier.vehiculeChoisi()));
+  document.querySelector('.envoi').hidden = !visible;
 }
 
 function afficherItems(liste) {
@@ -475,6 +486,7 @@ function enregistrerAmbulancier() {
   confirmationDemandee = false;
   $('enregistrer').textContent = 'Enregistrer la check-list';
   Ambulancier.terminer(saisie, (session.lire() || {}).identifiant);
+  majBarreEnvoi();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -522,7 +534,7 @@ $('vue-plus').addEventListener('click', (e) => {
 });
 
 $('liste').addEventListener('change', (e) => afficherListe(e.target.value));
-$('zone-ambulancier').addEventListener('reponse', annulerConfirmation);
+$('zone-ambulancier').addEventListener('reponse', () => { annulerConfirmation(); majBarreEnvoi(); });
 // Accès pour les écrans d'actions (actions.js).
 window.App = { appeler, envoyerEvenement };
 Ambulancier.initialiser();

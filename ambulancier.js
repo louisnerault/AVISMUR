@@ -381,19 +381,22 @@ const Ambulancier = (() => {
     return d.toLocaleDateString('fr-CA') === aujourdhui() ? `aujourd'hui ${heure(iso)}` : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   };
 
-  /** Niveaux d'obus et de bouteilles de la dernière check-list (libellés commençant par Obus / Bouteille). */
-  function niveauxOxygene(info) {
-    const rep = info.derniereCL && info.derniereCL.reponses;
-    if (!rep) return [];
-    return Object.entries(rep)
-      .filter(([cle, v]) => /^(obus|bouteille)/i.test(cle) && typeof v === 'number')
-      .map(([cle, v]) => ({ nom: cle.replace(/^Obus /i, '').replace(/ Litres?/i, ' L').replace(/^Bouteille /i, ''), valeur: v }));
-  }
-
-  function jaugeMini(valeur, max, classe) {
-    const barre = el('span', { classe: `jauge-mini ${classe || ''}`.trim(), 'aria-hidden': 'true' });
-    for (let i = 1; i <= max; i += 1) barre.append(el('span', { classe: i <= valeur ? 'plein' : '' }));
-    return barre;
+  /** Cadran de carburant à aiguille (0 à 8), comme au tableau de bord. */
+  function cadran(valeur, bas) {
+    const svg = el('svg:svg', { viewBox: '0 0 64 38', classe: `cadran${bas ? ' bas' : ''}`, 'aria-hidden': 'true' });
+    const point = (angle, r) => [32 + r * Math.cos((angle * Math.PI) / 180), 34 - r * Math.sin((angle * Math.PI) / 180)];
+    const [rx, ry] = point(180 - 22.5, 26);
+    svg.append(el('svg:path', { d: 'M6 34 A26 26 0 0 1 58 34', classe: 'cadran-arc' }),
+      el('svg:path', { d: `M6 34 A26 26 0 0 1 ${rx.toFixed(1)} ${ry.toFixed(1)}`, classe: 'cadran-reserve' }));
+    for (let i = 0; i <= 8; i += 2) {
+      const [x1, y1] = point(180 - i * 22.5, 20);
+      const [x2, y2] = point(180 - i * 22.5, 25);
+      svg.append(el('svg:line', { x1: x1.toFixed(1), y1: y1.toFixed(1), x2: x2.toFixed(1), y2: y2.toFixed(1), classe: 'cadran-trait' }));
+    }
+    svg.append(el('svg:text', { x: 4, y: 37, classe: 'cadran-lettre', texte: '0' }), el('svg:text', { x: 56, y: 37, classe: 'cadran-lettre', texte: '1' }),
+      el('svg:g', { transform: `rotate(${Math.max(0, Math.min(8, valeur)) * 22.5} 32 34)`, classe: 'cadran-aiguille' },
+        el('svg:line', { x1: 32, y1: 34, x2: 11, y2: 34 }), el('svg:circle', { cx: 32, cy: 34, r: 3.5 })));
+    return svg;
   }
 
   /** Grande case d'un véhicule : état de la check-list du jour, position, carburant, oxygène, garage. */
@@ -417,32 +420,25 @@ const Ambulancier = (() => {
         v.icone ? el('span', { classe: 'icone-vehicule', 'aria-hidden': 'true', texte: v.icone }) : null),
       position));
 
-    // Check-list du jour
-    let texteCL = 'Check-list à faire';
+    // Check-list du jour (rien à faire pour un véhicule indisponible)
+    let texteCL = etatV.classe === 'indispo' ? '' : 'Check-list à faire';
     if (etatV.statut) {
       texteCL = `CL faite ${heure(etatV.statut.date)} · ${etatV.statut.agent}`;
       if (etatV.statut.anomalies.length) texteCL += ` · ${etatV.statut.anomalies.length} anomalie${etatV.statut.anomalies.length > 1 ? 's' : ''}`;
     }
-    const ligneCL = el('span', { classe: 'carte-ligne carte-cl' }, el('span', { classe: 'pastille-etat', 'aria-hidden': 'true' }), el('span', { texte: texteCL }));
-    if (Object.keys(brouillons.lire(v.id)).length) ligneCL.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
-    bouton.append(ligneCL);
+    if (texteCL) {
+      const ligneCL = el('span', { classe: 'carte-ligne carte-cl' }, el('span', { classe: 'pastille-etat', 'aria-hidden': 'true' }), el('span', { texte: texteCL }));
+      if (Object.keys(brouillons.lire(v.id)).length) ligneCL.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
+      bouton.append(ligneCL);
+    }
 
-    // Carburant
+    // Carburant : petit cadran à aiguille
     const carb = carburantActuel(info);
     if (carb) {
       const bas = carb.valeur <= SEUILS_ANOMALIE.plein;
-      bouton.append(el('span', { classe: `carte-ligne${bas ? ' alerte' : ''}`, title: `Carburant ${carb.valeur}/8 (${carb.source})` },
-        bas ? el('span', { classe: 'pompe-plein' }, pompe()) : el('span', { classe: 'carte-picto', 'aria-hidden': 'true', texte: '⛽' }),
-        jaugeMini(carb.valeur, 8, bas ? 'bas' : ''), el('span', { texte: `${carb.valeur}/8${bas ? ' · plein à faire' : ''}` })));
-    }
-
-    // Oxygène
-    const niveaux = niveauxOxygene(info);
-    if (niveaux.length) {
-      const ligne = el('span', { classe: 'carte-ligne carte-o2' }, el('span', { classe: 'carte-picto', texte: 'O₂' }));
-      niveaux.forEach((n) => ligne.append(el('span', { classe: `niveau-mini${n.valeur <= SEUILS_ANOMALIE.obus ? ' bas' : ''}`, title: `${n.nom} : ${n.valeur}/10` },
-        el('span', { classe: 'niveau-mini-barre', style: `--niveau:${n.valeur / 10}` }), el('span', { texte: `${n.valeur}` }))));
-      bouton.append(ligne);
+      bouton.append(el('span', { classe: `carte-ligne carte-carburant${bas ? ' alerte' : ''}`, title: `Carburant ${carb.valeur}/8 (${carb.source})` },
+        cadran(carb.valeur, bas),
+        el('span', {}, el('span', { classe: 'carb-valeur', texte: `${carb.valeur}/8` }), bas ? el('span', { classe: 'carb-alerte' }, pompe(), el('span', { texte: 'plein à faire' })) : null)));
     }
 
     // Garage et carrosserie

@@ -794,3 +794,17 @@ body.fenetre-ouverte { overflow: hidden; }
 .historique .entree-titre span { color: var(--gris); font-size: 0.85rem; }
 .historique .entree.anomalie strong { color: var(--orange); }
 .historique .entree .lien { margin: 0; align-self: flex-start; }
+
+/* Cadran de carburant des cases véhicules */
+.carte-carburant { gap: 0.6rem; }
+.cadran { width: 3.6rem; height: 2.2rem; flex-shrink: 0; overflow: visible; }
+.cadran-arc { fill: none; stroke: rgb(19 41 75 / 0.15); stroke-width: 5; }
+.cadran-reserve { fill: none; stroke: var(--erreur); stroke-width: 5; }
+.cadran-trait { stroke: var(--encre); stroke-width: 1.5; stroke-linecap: round; }
+.cadran-lettre { font: 700 7px 'Atkinson Hyperlegible', system-ui, sans-serif; fill: var(--gris); }
+.cadran-aiguille line { stroke: var(--rhone); stroke-width: 3; stroke-linecap: round; }
+.cadran.bas .cadran-aiguille line { stroke: var(--erreur); }
+.cadran-aiguille circle { fill: var(--encre); }
+.carb-valeur { font-weight: 700; font-variant-numeric: tabular-nums; }
+.carb-alerte { display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem; }
+.carb-alerte .picto-pompe { width: 1.1rem; height: 1.1rem; }
