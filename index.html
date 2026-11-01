@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=18">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -154,6 +154,25 @@
         </select>
       </div>
 
+      <!-- Vue « Plus » : configuration (administrateurs), déconnexion -->
+      <div id="vue-plus" class="vue-plus" hidden>
+        <h1>Plus</h1>
+        <ul class="liens-menu">
+          <li id="lien-configuration" hidden>
+            <button type="button" class="lien-menu" data-action="configuration">
+              Configuration
+              <small>Véhicules et questions des check-lists (administrateurs)</small>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="lien-menu" data-action="deconnexion">
+              Se déconnecter
+              <small>Retour à l'écran de connexion</small>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <!-- Check-list ambulancier : véhicules -->
       <div id="zone-ambulancier" hidden>
         <h1>Vérification du véhicule</h1>
@@ -179,6 +198,13 @@
     </section>
   </main>
 
+  <!-- Menu principal : visible une fois connecté. Chaque entrée correspond à une vue (data-vue). -->
+  <nav id="menu" class="menu-principal" aria-label="Menu principal" hidden>
+    <button type="button" data-vue="aujourdhui" aria-current="page">Aujourd'hui</button>
+    <button type="button" data-vue="vehicules" id="menu-vehicules">Véhicules</button>
+    <button type="button" data-vue="plus">Plus</button>
+  </nav>
+
   <footer class="pied">
     <img class="logo-cha" src="img/logo-cha.png" alt="Centre hospitalier d'Avignon" width="29" height="40">
     <p>Centre hospitalier d'Avignon<br><span>Prototype à usage interne</span></p>
@@ -189,6 +215,6 @@
   <script src="compteur.js?v=5"></script>
   <script src="ambulancier.js?v=15"></script>
   <script src="config-admin.js?v=3"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

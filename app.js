@@ -88,6 +88,7 @@ function afficher(idEcran, erreur = '') {
   ECRANS.forEach((id) => { $(id).hidden = id !== idEcran; });
   const connecte = idEcran === 'ecran-checklist';
   $('utilisateur').hidden = !connecte;
+  $('menu').hidden = !connecte;
   document.body.classList.toggle('connecte', connecte);
   const zone = $(idEcran).querySelector('.erreur');
   if (zone) zone.textContent = erreur;
@@ -104,15 +105,14 @@ function afficherApplication(infos) {
   if (jeton) session.ecrire({ jeton, identifiant: infos.identifiant, role: infos.role });
   afficher('ecran-checklist');
   $('nom-utilisateur').textContent = `${infos.identifiant} (${infos.role})`;
-  // Ambulanciers et IADE ne voient que leur check-list ; l'encadrement et les admins choisissent.
-  const metier = infos.role === 'ambulancier' || infos.role === 'iade';
-  if (metier) $('liste').value = infos.role;
-  $('choix-liste').hidden = metier;
+  roleCourant = infos.role;
+  // Véhicules : réservé aux ambulanciers et à l'encadrement (l'IADE n'a pas de véhicule).
+  $('menu-vehicules').hidden = infos.role === 'iade';
   // Écran de configuration des véhicules et des check-lists : administrateurs seulement.
   $('option-config').hidden = infos.role !== 'admin';
   $('option-config').disabled = infos.role !== 'admin';
   if ($('liste').value === 'config' && infos.role !== 'admin') $('liste').value = 'ambulancier';
-  afficherListe($('liste').value);
+  ouvrirVue('aujourdhui');
   envoyerFileAttente();
   chargerConfig();
   chargerReleves();
@@ -462,6 +462,49 @@ function enregistrerAmbulancier() {
   Ambulancier.terminer(saisie, (session.lire() || {}).identifiant);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ---------- Menu principal ----------
+// Une vue par entrée du menu. « Aujourd'hui » : check-list du jour (liste choisie selon le rôle).
+// « Véhicules » : même écran, avec l'ambulancier forcé et le choix de véhicule en tête.
+// « Plus » : configuration (admin) et déconnexion. Pour une nouvelle fonctionnalité, voir README.md.
+let roleCourant = '';
+
+function ouvrirVue(vue) {
+  if (vue === 'vehicules' && roleCourant === 'iade') vue = 'aujourdhui';
+  document.querySelectorAll('[data-vue]').forEach((bouton) => {
+    if (bouton.dataset.vue === vue) bouton.setAttribute('aria-current', 'page');
+    else bouton.removeAttribute('aria-current');
+  });
+  const metier = roleCourant === 'ambulancier' || roleCourant === 'iade';
+  const plus = vue === 'plus';
+  $('vue-plus').hidden = !plus;
+  if (plus) {
+    $('lien-configuration').hidden = roleCourant !== 'admin';
+    ['zone-ambulancier', 'zone-config', 'items', 'choix-liste'].forEach((id) => { $(id).hidden = true; });
+    document.querySelector('.envoi').hidden = true;
+    return;
+  }
+  $('choix-liste').hidden = metier || vue === 'vehicules';
+  if (vue === 'vehicules') $('liste').value = 'ambulancier';
+  else if (metier) $('liste').value = roleCourant;
+  afficherListe($('liste').value);
+  if (vue === 'vehicules') $('vehicules').scrollIntoView({ block: 'start' });
+}
+
+document.querySelectorAll('[data-vue]').forEach((bouton) => {
+  bouton.addEventListener('click', () => ouvrirVue(bouton.dataset.vue));
+});
+
+$('vue-plus').addEventListener('click', (e) => {
+  const action = e.target.closest('[data-action]');
+  if (!action) return;
+  if (action.dataset.action === 'configuration') {
+    ouvrirVue('aujourdhui');
+    $('liste').value = 'config';
+    afficherListe('config');
+  }
+  if (action.dataset.action === 'deconnexion') $('deconnexion').click();
+});
 
 $('liste').addEventListener('change', (e) => afficherListe(e.target.value));
 $('zone-ambulancier').addEventListener('reponse', annulerConfirmation);

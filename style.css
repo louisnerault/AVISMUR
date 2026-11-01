@@ -630,6 +630,34 @@ body.camera-ouverte { overflow: hidden; }
 .cfg-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1.5rem; }
 .cfg-actions .principal { width: auto; flex: 1 1 16rem; margin: 0; }
 
+/* ---------- Menu principal (une fois connecté) ---------- */
+.menu-principal {
+  position: sticky; bottom: 0; z-index: 5;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff; border-top: 1px solid var(--trait);
+  box-shadow: 0 -4px 14px rgb(19 41 75 / 0.08);
+}
+.menu-principal button {
+  min-height: 3.6rem; padding: 0.4rem 0.3rem;
+  font: inherit; font-weight: 700; color: var(--gris);
+  background: none; border: 0; border-top: 4px solid transparent; cursor: pointer;
+}
+.menu-principal button[aria-current="page"] { color: var(--bleu); border-top-color: var(--bleu); }
+.menu-principal button:focus-visible { outline: 3px solid var(--orange); outline-offset: -4px; }
+
+/* ---------- Vue « Plus » ---------- */
+.vue-plus h1 { margin-bottom: 1rem; }
+.liens-menu { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.lien-menu {
+  display: block; width: 100%; min-height: 3.2rem; padding: 0.7rem 0.9rem;
+  text-align: left; font: inherit; font-weight: 700; color: var(--bleu);
+  background: #fff; border: 2px solid var(--trait); border-radius: var(--rayon); cursor: pointer;
+}
+.lien-menu small { display: block; margin-top: 0.15rem; font-size: 0.9rem; font-weight: 400; color: var(--gris); }
+.lien-menu:hover { border-color: var(--bleu); }
+.lien-menu:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
 /* ---------- Animation de chargement ---------- */
 .chargement {
   position: sticky; top: 0; z-index: 3;
