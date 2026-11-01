@@ -225,8 +225,10 @@ async function envoyerFileAttente() {
           dateSaisie: suivante.date,
         });
       } catch (err) {
+        marquerReseau(false);
         break; // réseau coupé : on garde tout et on réessaiera au retour du réseau
       }
+      marquerReseau(true);
       if (rep.reconnecter) break; // session expirée : les entrées restent, envoyées après reconnexion
       if (rep.ok) {
         fileAttente.ecrire(fileAttente.lire().filter((e) => e.id !== suivante.id));
@@ -473,7 +475,16 @@ $('enregistrer').addEventListener('click', () => {
   mettreEnFile({ liste: $('liste').value, items: lireCoches() });
 });
 
-window.addEventListener('online', () => envoyerFileAttente());
+// ---------- Indicateur hors ligne ----------
+// Affiché tant que le réseau (Wi-Fi ou GSM) n'est pas disponible. navigator.onLine peut rester
+// vrai sans accès réel : un échec d'envoi passe aussi l'indicateur en « hors ligne ».
+function marquerReseau(disponible) {
+  $('hors-ligne').hidden = disponible;
+}
+
+marquerReseau(navigator.onLine);
+window.addEventListener('online', () => { marquerReseau(true); envoyerFileAttente(); });
+window.addEventListener('offline', () => marquerReseau(false));
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* PWA hors ligne indisponible */ });
@@ -486,8 +497,10 @@ if ('serviceWorker' in navigator) {
   if (!actuelle) return afficher('ecran-connexion');
   try {
     const rep = await appeler('ping');
+    marquerReseau(true);
     if (rep.ok) afficherApplication(rep);
   } catch (err) {
+    marquerReseau(false);
     afficherApplication(actuelle);
     $('statut').textContent = 'Mode hors ligne : les check-lists seront envoyées au retour du réseau.';
     $('statut').className = 'message';

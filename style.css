@@ -65,6 +65,26 @@ body {
 }
 @keyframes trace { from { stroke-dashoffset: 1400; } }
 
+/* Indicateur hors ligne : visible quand le réseau (Wi-Fi ou GSM) n'est pas disponible. */
+.hors-ligne {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: 1rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--erreur);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hors-ligne svg { width: 1.1rem; height: 1.1rem; flex: none; }
+
 .utilisateur {
   position: relative;
   z-index: 1;
