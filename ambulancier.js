@@ -365,6 +365,7 @@ const Ambulancier = (() => {
     return {
       statut, derniereCL, dernierPlein: i.dernierPlein || null, dernierGarage: i.dernierGarage || null,
       derniereVerifExterieure: i.derniereVerifExterieure || null, defauts: i.defauts || [], releve: releves.lire(id),
+      dernierNettoyageInterieur: i.dernierNettoyageInterieur || null, dernierNettoyageExterieur: i.dernierNettoyageExterieur || null,
     };
   }
 
@@ -445,6 +446,12 @@ const Ambulancier = (() => {
       bouton.append(el('span', { classe: `carte-ligne carte-carburant${bas ? ' alerte' : ''}`, title: `Carburant ${carb.valeur}/8 (${carb.source})` },
         cadran(carb.valeur, bas),
         el('span', {}, el('span', { classe: 'carb-valeur', texte: `${carb.valeur}/8` }), bas ? el('span', { classe: 'carb-alerte' }, pompe(), el('span', { texte: 'plein à faire' })) : null)));
+    }
+
+    // Kilométrage (dernier relevé connu : check-list ou plein)
+    if (info.releve && info.releve.km) {
+      bouton.append(el('span', { classe: 'carte-ligne carte-km', title: `Relevé du ${new Date(info.releve.date).toLocaleDateString('fr-FR')}` },
+        el('span', { classe: 'carte-picto', 'aria-hidden': 'true', texte: '⏱' }), el('span', { texte: km(info.releve.km) })));
     }
 
     // Garage et carrosserie
@@ -726,6 +733,9 @@ const Ambulancier = (() => {
       if (detail.km) releves.fusionner({ [vehicule]: { km: Number(detail.km), date } });
     } else if (type === 'garage') {
       i.dernierGarage = { ...base, motif: detail.motif, commentaire: detail.commentaire };
+    } else if (type === 'nettoyage') {
+      if (detail.interieur) i.dernierNettoyageInterieur = { ...base, commentaire: detail.commentaire };
+      if (detail.exterieur) i.dernierNettoyageExterieur = { ...base, commentaire: detail.commentaire };
     } else if (type === 'exterieur') {
       i.derniereVerifExterieure = base;
       const repares = new Set(detail.repares || []);
@@ -738,7 +748,7 @@ const Ambulancier = (() => {
   }
 
   return {
-    initialiser, finChargement, infosVehicule, etatVehicule, estDZ, helico, creerCarte: carte, noterEvenement,
+    initialiser, finChargement, infosVehicule, etatVehicule, estDZ, helico, cadran, carburantActuel, creerCarte: carte, noterEvenement,
     ouvrirChecklist: (id) => choisirVehicule(id),
     vehiculeChoisi: () => etat.vehicule, afficher: () => { rendreVehicules(); rendreQuestions(); }, lire, terminer, majReleves };
 })();

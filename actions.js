@@ -1,6 +1,6 @@
 /*
  * Menu d'actions d'un véhicule (en touchant sa case) et écrans associés :
- * check-list, dernière check-list, plein, passage au garage, vérification extérieure,
+ * check-list, dernière check-list, plein, passage au garage, nettoyage, vérification extérieure,
  * historique. Les enregistrements passent par la file d'attente (hors ligne possible).
  */
 const Actions = (() => {
@@ -86,6 +86,7 @@ const Actions = (() => {
         v.sansPlein ? null : action('⛽', 'Signaler un plein', info.dernierPlein ? `Dernier : ${date(info.dernierPlein.date)}` : 'Carburant, AdBlue, ticket', () => plein(v, info, etatV)),
         v.sansExterieur ? null : action('🚐', 'Vérification extérieure', info.defauts.length ? `${info.defauts.length} défaut(s) connu(s)` : 'Carrosserie : rayures, impacts', () => exterieur(v, info, etatV)),
         v.sansGarage ? null : action('🔧', 'Passage au garage', info.dernierGarage ? `Dernier : ${date(info.dernierGarage.date)}` : 'Entretien, réparation, contrôle', () => garage(v, info, etatV)),
+        action('🧽', 'Nettoyage', resumeNettoyage(info), () => nettoyage(v, info, etatV)),
         action('🕘', 'Historique du véhicule', 'Check-lists, pleins, garage, carrosserie', () => historique(v, info, etatV))));
   }
 
@@ -224,6 +225,34 @@ const Actions = (() => {
       boutonRetour(v, info, etatV));
   }
 
+  // ---------- Nettoyage ----------
+  function resumeNettoyage(info) {
+    const i = info.dernierNettoyageInterieur;
+    const e = info.dernierNettoyageExterieur;
+    if (!i && !e) return 'Intérieur, extérieur';
+    return [i ? `intérieur ${date(i.date)}` : '', e ? `extérieur ${date(e.date)}` : ''].filter(Boolean).join(' · ');
+  }
+
+  function nettoyage(v, info, etatV) {
+    const saisie = { interieur: true, exterieur: false, commentaire: '' };
+    const idCom = id();
+    const panneau = fenetre(`${v.nom || v.id} · nettoyage`,
+      el('p', { classe: 'aide-question', texte: `Derniers : ${resumeNettoyage(info)}` }),
+      el('fieldset', { classe: 'question' }, el('legend', { texte: 'Nettoyage fait' }),
+        el('label', { classe: 'cfg-case' }, el('input', { type: 'checkbox', checked: true, surchange: (e) => { saisie.interieur = e.target.checked; } }), el('span', { texte: 'Intérieur (cellule, poste de conduite)' })),
+        el('label', { classe: 'cfg-case' }, el('input', { type: 'checkbox', surchange: (e) => { saisie.exterieur = e.target.checked; } }), el('span', { texte: 'Extérieur (lavage)' }))),
+      el('div', { classe: 'champ' }, el('label', { for: idCom, texte: 'Commentaire' }),
+        el('textarea', { id: idCom, rows: 2, surinput: (e) => { saisie.commentaire = e.target.value; } })),
+      el('button', { type: 'button', classe: 'principal', texte: 'Enregistrer le nettoyage', surclick: () => {
+        if (!saisie.interieur && !saisie.exterieur) {
+          message(panneau, 'Cochez intérieur, extérieur ou les deux.', 'erreur');
+          return;
+        }
+        if (App.envoyerEvenement('nettoyage', v.id, saisie)) fermer();
+      } }),
+      boutonRetour(v, info, etatV));
+  }
+
   // ---------- Vérification extérieure ----------
   const FACES = { gauche: 'Côté gauche', droite: 'Côté droit', avant: 'Avant', arriere: 'Arrière' };
 
@@ -341,7 +370,7 @@ const Actions = (() => {
   }
 
   // ---------- Historique ----------
-  const TYPES = { checklist: '📋 Check-list', plein: '⛽ Plein', garage: '🔧 Garage', exterieur: '🚐 Vérification extérieure' };
+  const TYPES = { checklist: '📋 Check-list', plein: '⛽ Plein', garage: '🔧 Garage', nettoyage: '🧽 Nettoyage', exterieur: '🚐 Vérification extérieure' };
 
   function resume(e) {
     if (e.type === 'checklist') {
@@ -355,6 +384,7 @@ const Actions = (() => {
     const d = e.detail || {};
     if (e.type === 'plein') return [d.km ? `${Number(d.km).toLocaleString('fr-FR')} km` : '', `carburant ${d.carburant}/8`, d.adblue ? 'AdBlue' : '', d.commentaire].filter(Boolean).join(' · ');
     if (e.type === 'garage') return [d.motif, d.commentaire].filter(Boolean).join(' · ');
+    if (e.type === 'nettoyage') return [d.interieur && d.exterieur ? 'intérieur et extérieur' : (d.interieur ? 'intérieur' : 'extérieur'), d.commentaire].filter(Boolean).join(' · ');
     if (e.type === 'exterieur') return [`${(d.defauts || []).length} nouveau(x) défaut(s)`, (d.repares || []).length ? `${d.repares.length} réparé(s)` : '', d.commentaire].filter(Boolean).join(' · ');
     return '';
   }
