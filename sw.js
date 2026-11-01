@@ -1,7 +1,7 @@
 // À incrémenter à chaque mise à jour, avec les ?v= de index.html.
-const CACHE = 'smur-pwa-v41';
+const CACHE = 'avismur-v42';
 const FICHIERS = [
-  './', 'index.html', 'style.css?v=22', 'app.js?v=20', 'config.js?v=5', 'checklists.js?v=11', 'ambulancier.js?v=20', 'actions.js?v=5', 'config-admin.js?v=5', 'parc.js?v=1', 'compteur.js?v=5',
+  './', 'index.html', 'style.css?v=22', 'app.js?v=21', 'config.js?v=6', 'checklists.js?v=12', 'ambulancier.js?v=21', 'actions.js?v=5', 'config-admin.js?v=5', 'parc.js?v=2', 'compteur.js?v=5',
   'manifest.webmanifest',
   'img/logo-smur.png', 'img/logo-cha.png', 'img/icon-192.png', 'img/icon-512.png', 'img/icon-maskable-512.png',
 ];
@@ -11,11 +11,13 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// Supprime les anciennes versions du cache et prend la main sur les pages ouvertes.
+// Supprime les anciennes versions du cache (uniquement celles de cette app : préfixe « avismur- »,
+// ou l'ancien « smur-pwa- ») — ne jamais toucher aux caches des autres apps du domaine —
+// et prend la main sur les pages ouvertes.
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((cles) => Promise.all(cles.filter((c) => c.startsWith('smur-pwa-') && c !== CACHE).map((c) => caches.delete(c))))
+      .then((cles) => Promise.all(cles.filter((c) => (c.startsWith('avismur-') || c.startsWith('smur-pwa-')) && c !== CACHE).map((c) => caches.delete(c))))
       .then(() => self.clients.claim())
   );
 });
@@ -35,6 +37,6 @@ self.addEventListener('fetch', (e) => {
         }
         return r;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.open(CACHE).then((c) => c.match(e.request)))
   );
 });

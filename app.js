@@ -14,13 +14,13 @@ const parcours = { cri: '', jetonCreation: '' };
 // sauf si « Rester connecté sur ce téléphone » a été coché (jeton d'appareil ci-dessous).
 const session = {
   lire() {
-    try { return JSON.parse(sessionStorage.getItem('smur_session')); } catch (e) { return null; }
+    try { return JSON.parse(sessionStorage.getItem('avismur_session')); } catch (e) { return null; }
   },
   ecrire(valeur) {
-    try { sessionStorage.setItem('smur_session', JSON.stringify(valeur)); } catch (e) { /* stockage indisponible */ }
+    try { sessionStorage.setItem('avismur_session', JSON.stringify(valeur)); } catch (e) { /* stockage indisponible */ }
   },
   effacer() {
-    try { sessionStorage.removeItem('smur_session'); } catch (e) { /* stockage indisponible */ }
+    try { sessionStorage.removeItem('avismur_session'); } catch (e) { /* stockage indisponible */ }
   },
 };
 
@@ -184,7 +184,7 @@ const chargement = (() => {
 // ---------- File d'attente hors ligne ----------
 // Chaque check-list est d'abord gardée sur l'appareil, puis envoyée au serveur.
 // Une entrée n'est retirée qu'après une réponse « ok » du serveur.
-const CLE_FILE = 'smur_file_attente';
+const CLE_FILE = 'avismur_file_attente';
 let envoiEnCours = false;
 
 const fileAttente = {

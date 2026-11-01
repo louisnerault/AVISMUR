@@ -9,7 +9,7 @@
  * véhicule, gardé sur l'appareil pour rester consultable hors ligne.
  */
 const Parc = (() => {
-  const CLE_HISTO = 'smur_histo_vehicules';
+  const CLE_HISTO = 'avismur_histo_vehicules';
   const NB = 5; // vérifications, pleins et passages au garage affichés dans la fiche
   let racine;
   let colonne;

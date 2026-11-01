@@ -5,10 +5,10 @@
  * un départ en intervention au milieu de la vérification ne fait rien perdre.
  */
 const Ambulancier = (() => {
-  const CLE_BROUILLONS = 'smur_brouillons_ambulancier';
-  const CLE_RELEVES = 'smur_derniers_releves';
-  const CLE_PARC = 'smur_etat_parc';
-  const CLE_STATUTS = 'smur_statuts_jour';
+  const CLE_BROUILLONS = 'avismur_brouillons_ambulancier';
+  const CLE_RELEVES = 'avismur_derniers_releves';
+  const CLE_PARC = 'avismur_etat_parc';
+  const CLE_STATUTS = 'avismur_statuts_jour';
   const etat = { vehicule: null, reponses: {} };
   let chargementTermine = false;
   let zoneVehicules;
@@ -350,7 +350,7 @@ const Ambulancier = (() => {
   }
 
   // ---------- Informations par véhicule (serveur + actions faites sur cet appareil) ----------
-  const CLE_INFOS = 'smur_infos_vehicules';
+  const CLE_INFOS = 'avismur_infos_vehicules';
   const infosServeur = (id) => lireStockage(CLE_INFOS)[id] || { defauts: [] };
 
   /**

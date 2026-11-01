@@ -177,7 +177,7 @@ let MODELES = {
  * Elle est enregistrée sur le serveur et gardée sur l'appareil pour le hors ligne ;
  * elle remplace les véhicules et les questions ci-dessus. Sans elle, ce fichier s'applique.
  */
-const CLE_CONFIG = 'smur_config';
+const CLE_CONFIG = 'avismur_config';
 const CONFIG_DEFAUT = JSON.parse(JSON.stringify({ vehicules: VEHICULES, modeles: MODELES }));
 
 function appliquerConfig(config) {
