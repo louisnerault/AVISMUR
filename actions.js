@@ -256,14 +256,17 @@ const Actions = (() => {
   // ---------- Vérification extérieure ----------
   const FACES = { gauche: 'Côté gauche', droite: 'Côté droit', avant: 'Avant', arriere: 'Arrière' };
 
-  // Calques dessinés d'après photos, par véhicule (img/vues/<calque>_<face>.svg). Les proportions
-  // des fichiers correspondent aux cadres .schema-cote (2:1) et .schema-face (6:5).
-  const CALQUES = { F21: 'jumpy', F22: 'jumpy' };
+  // Calques par véhicule : fichier dans img/vues/, « * » remplacé par la face (gauche, droite, avant, arriere).
+  // Les proportions des fichiers correspondent aux cadres .schema-cote (2:1) et .schema-face (6:5).
+  const CALQUES = {
+    F21: 'jumpy_*.svg', F22: 'jumpy_*.svg', // Citroën Jumpy, dessiné d'après photos
+    F25: 'jaune_*.jpg', F26: 'jaune_*.jpg', // véhicule jaune
+  };
 
   /** Silhouette du véhicule, vue de la face demandée (repère 0..1 pour les défauts). */
   function silhouette(face, v) {
     const calque = v && CALQUES[v.id];
-    if (calque) return el('img', { src: `img/vues/${calque}_${face}.svg`, alt: '', classe: 'silhouette calque', draggable: 'false' });
+    if (calque) return el('img', { src: `img/vues/${calque.replace('*', face)}`, alt: '', classe: 'silhouette calque', draggable: 'false' });
     const s = el('svg:svg', { viewBox: face === 'gauche' || face === 'droite' ? '0 0 200 100' : '0 0 120 100', classe: 'silhouette', 'aria-hidden': 'true' });
     const trait = (d, classe = '') => s.append(el('svg:path', { d, classe }));
     if (face === 'gauche' || face === 'droite') {
