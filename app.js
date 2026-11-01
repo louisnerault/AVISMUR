@@ -10,7 +10,8 @@ const ERREUR_RESEAU = 'Le serveur ne répond pas. Vérifiez la connexion interne
 // État du parcours de première connexion (en mémoire uniquement).
 const parcours = { cri: '', jetonCreation: '' };
 
-// Le jeton de session vit le temps de l'onglet : fermer l'application = se reconnecter.
+// Session courte : vit le temps de l'onglet. Fermer l'application = se reconnecter,
+// sauf si « Rester connecté sur ce téléphone » a été coché (jeton d'appareil ci-dessous).
 const session = {
   lire() {
     try { return JSON.parse(sessionStorage.getItem('smur_session')); } catch (e) { return null; }
@@ -23,7 +24,21 @@ const session = {
   },
 };
 
-async function appeler(action, charge = {}) {
+// « Rester connecté » : jeton d'appareil durable, gardé sur le téléphone (30 jours sans utilisation).
+const CLE_APPAREIL = 'avismur_appareil';
+const appareil = {
+  lire() {
+    try { return JSON.parse(localStorage.getItem(CLE_APPAREIL)); } catch (e) { return null; }
+  },
+  ecrire(valeur) {
+    try { localStorage.setItem(CLE_APPAREIL, JSON.stringify(valeur)); } catch (e) { /* stockage indisponible */ }
+  },
+  effacer() {
+    try { localStorage.removeItem(CLE_APPAREIL); } catch (e) { /* stockage indisponible */ }
+  },
+};
+
+async function requete(action, charge) {
   // text/plain évite la requête de pré-vérification CORS, non supportée par Apps Script.
   const actuelle = session.lire();
   const r = await fetch(CONFIG.API_URL, {
@@ -31,12 +46,41 @@ async function appeler(action, charge = {}) {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action, jeton: actuelle && actuelle.jeton, ...charge }),
   });
-  const rep = await r.json();
+  return r.json();
+}
+
+/** Ouvre une nouvelle session à partir du jeton d'appareil. Lève une erreur si le réseau manque. */
+async function reprendreSession() {
+  const enregistre = appareil.lire();
+  if (!enregistre) return false;
+  const rep = await requete('reprendre', { jetonAppareil: enregistre.jetonAppareil });
+  if (rep.ok) {
+    session.ecrire({ jeton: rep.jeton, identifiant: rep.identifiant, role: rep.role });
+    appareil.ecrire({ ...enregistre, identifiant: rep.identifiant, role: rep.role });
+    return true;
+  }
+  if (rep.oublierAppareil) appareil.effacer();
+  return false;
+}
+
+async function appeler(action, charge = {}) {
+  let rep = await requete(action, charge);
+  // Session courte expirée : on la renouvelle avec le jeton d'appareil, puis on rejoue la requête.
+  if (rep.reconnecter && await reprendreSession()) rep = await requete(action, charge);
   if (rep.reconnecter) {
     session.effacer();
     afficher('ecran-connexion', 'Session expirée, reconnectez-vous.');
   }
   return rep;
+}
+
+/** Après une connexion réussie : garde ou oublie l'appareil selon la case cochée. */
+function memoriserAppareil(rep, resterConnecte) {
+  if (resterConnecte && rep.jetonAppareil) {
+    appareil.ecrire({ jetonAppareil: rep.jetonAppareil, identifiant: rep.identifiant, role: rep.role });
+  } else {
+    appareil.effacer();
+  }
 }
 
 /** Affiche un écran et, éventuellement, un message d'erreur dans cet écran. */
@@ -56,7 +100,8 @@ function message(idEcran, texte) {
 }
 
 function afficherApplication(infos) {
-  session.ecrire({ jeton: infos.jeton || session.lire().jeton, identifiant: infos.identifiant, role: infos.role });
+  const jeton = infos.jeton || (session.lire() || {}).jeton;
+  if (jeton) session.ecrire({ jeton, identifiant: infos.identifiant, role: infos.role });
   afficher('ecran-checklist');
   $('nom-utilisateur').textContent = `${infos.identifiant} (${infos.role})`;
   // Ambulanciers et IADE ne voient que leur check-list ; l'encadrement et les admins choisissent.
@@ -179,9 +224,12 @@ document.querySelectorAll('[data-aller]').forEach((lien) => {
 // Connexion habituelle : CRI + mot de passe.
 $('ecran-connexion').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const rep = await soumettre('ecran-connexion', 'login', { cri: $('cri').value.trim(), motDePasse: $('mdp').value });
+  const resterConnecte = $('rester-connecte').checked;
+  const rep = await soumettre('ecran-connexion', 'login', { cri: $('cri').value.trim(), motDePasse: $('mdp').value, resterConnecte });
   $('mdp').value = '';
-  if (rep.ok) afficherApplication(rep);
+  if (!rep.ok) return;
+  memoriserAppareil(rep, resterConnecte);
+  afficherApplication(rep);
 });
 
 // Étape 1 : demande du SMS.
@@ -213,7 +261,8 @@ $('ecran-mdp').addEventListener('submit', async (e) => {
     message('ecran-mdp', 'Les deux mots de passe ne correspondent pas.');
     return;
   }
-  const rep = await soumettre('ecran-mdp', 'definirMotDePasse', { jetonCreation: parcours.jetonCreation, motDePasse: mdp });
+  const resterConnecte = $('rester-connecte-mdp').checked;
+  const rep = await soumettre('ecran-mdp', 'definirMotDePasse', { jetonCreation: parcours.jetonCreation, motDePasse: mdp, resterConnecte });
   if (rep.recommencer) {
     afficher('ecran-sms', rep.erreur);
     return;
@@ -223,6 +272,7 @@ $('ecran-mdp').addEventListener('submit', async (e) => {
   $('confirmation-mdp').value = '';
   parcours.cri = '';
   parcours.jetonCreation = '';
+  memoriserAppareil(rep, resterConnecte);
   afficherApplication(rep);
 });
 
@@ -252,8 +302,12 @@ document.querySelectorAll('.voir').forEach((bouton) => {
 });
 
 $('deconnexion').addEventListener('click', async () => {
-  try { await appeler('logout'); } catch (err) { /* déconnexion locale quand même */ }
+  const enregistre = appareil.lire();
+  try {
+    await requete('logout', { jetonAppareil: enregistre && enregistre.jetonAppareil });
+  } catch (err) { /* déconnexion locale quand même */ }
   session.effacer();
+  appareil.effacer();
   afficher('ecran-connexion');
 });
 
@@ -357,10 +411,10 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => { /* PWA hors ligne indisponible */ });
 }
 
-// Au chargement : reprendre la session si elle est encore valide.
-// Hors ligne, on reprend la session enregistrée sur l'appareil ; la saisie reste possible.
+// Au chargement : reprendre la session si elle est encore valide, sinon le jeton d'appareil
+// (« rester connecté »). Hors ligne, on reprend l'utilisateur connu ; la saisie reste possible.
 (async () => {
-  const actuelle = session.lire();
+  const actuelle = session.lire() || appareil.lire();
   if (!actuelle) return afficher('ecran-connexion');
   try {
     const rep = await appeler('ping');

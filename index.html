@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -49,6 +49,10 @@
           <button type="button" class="voir" data-cible="mdp" aria-pressed="false">Afficher</button>
         </div>
       </div>
+      <label class="case-rester" for="rester-connecte">
+        <input id="rester-connecte" type="checkbox">
+        <span>Rester connecté sur ce téléphone<small>Uniquement sur votre téléphone personnel. Valable 30 jours après la dernière utilisation.</small></span>
+      </label>
       <button type="submit" class="principal">Se connecter</button>
       <p class="message erreur" role="alert"></p>
       <div class="aide">
@@ -118,6 +122,10 @@
         <label for="confirmation-mdp">Confirmez le mot de passe</label>
         <input id="confirmation-mdp" type="password" autocomplete="new-password" required>
       </div>
+      <label class="case-rester" for="rester-connecte-mdp">
+        <input id="rester-connecte-mdp" type="checkbox">
+        <span>Rester connecté sur ce téléphone<small>Uniquement sur votre téléphone personnel. Valable 30 jours après la dernière utilisation.</small></span>
+      </label>
       <button type="submit" class="principal">Enregistrer et se connecter</button>
       <p class="message erreur" role="alert"></p>
     </form>
@@ -163,6 +171,6 @@
   <script src="checklists.js?v=6"></script>
   <script src="compteur.js?v=5"></script>
   <script src="ambulancier.js?v=9"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

@@ -576,3 +576,9 @@ body.camera-ouverte { overflow: hidden; }
   background: rgb(0 0 0 / 0.55); border: 2px solid rgb(255 255 255 / 0.7); border-radius: 999px;
 }
 .camera-option[aria-pressed="true"] { color: #000; background: #FFD84D; border-color: #FFD84D; }
+
+/* « Rester connecté sur ce téléphone » */
+.case-rester { display: flex; align-items: flex-start; gap: 0.75rem; margin: 0.1rem 0 1rem; font-weight: 400; cursor: pointer; }
+.case-rester input { width: 1.4rem; height: 1.4rem; min-height: 0; margin: 0.1rem 0 0; flex-shrink: 0; accent-color: var(--bleu); }
+.case-rester span { font-weight: 700; }
+.case-rester small { display: block; margin-top: 0.15rem; font-size: 0.9rem; font-weight: 400; color: var(--gris); }
