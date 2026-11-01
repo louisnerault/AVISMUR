@@ -808,3 +808,13 @@ body.fenetre-ouverte { overflow: hidden; }
 .carb-valeur { font-weight: 700; font-variant-numeric: tabular-nums; }
 .carb-alerte { display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem; }
 .carb-alerte .picto-pompe { width: 1.1rem; height: 1.1rem; }
+
+/* Véhicule indisponible : case hachurée en gris. */
+.vehicule.carte.indispo {
+  color: var(--gris);
+  border-color: #9AA6B8;
+  background-color: #EEF1F5;
+  background-image: repeating-linear-gradient(135deg, rgb(74 91 118 / 0.16) 0 8px, transparent 8px 18px);
+}
+.vehicule.carte.indispo .ligne-titre strong { color: var(--encre); }
+.vehicule.carte.indispo .position { color: var(--erreur); }
