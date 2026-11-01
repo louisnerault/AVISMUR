@@ -163,7 +163,7 @@ const Ambulancier = (() => {
    * Curseur (input range) : tant qu'il n'a pas été touché, la question n'a pas de réponse.
    * `dessiner(bloc, valeur)` met à jour le visuel (bouteille ou jauge).
    */
-  function curseur(cle, max, visuel, dessiner, texteValeur, aide) {
+  function curseur(cle, max, visuel, dessiner, texteValeur, aide, affiche = cle) {
     const id = nouvelId();
     const valeur = etat.reponses[cle];
     const vide = valeur === undefined || valeur === '';
@@ -174,7 +174,7 @@ const Ambulancier = (() => {
     entree.value = vide ? String(Math.round(max / 2)) : String(valeur);
     const affichage = el('p', { classe: 'valeur-curseur', 'aria-hidden': 'true' });
     const bloc = el('fieldset', { classe: 'question curseur' },
-      el('legend', {}, el('label', { for: id, texte: cle })), visuel, entree, affichage);
+      el('legend', {}, el('label', { for: id, texte: affiche })), visuel, entree, affichage);
     if (aide) bloc.insertBefore(el('p', { classe: 'aide-question', texte: aide }), visuel);
     bloc.majCurseur = (v, estVide) => {
       bloc.toggleAttribute('data-vide', estVide);
@@ -195,7 +195,7 @@ const Ambulancier = (() => {
         b.style.setProperty('--niveau', v / 10);
         b.dataset.alerte = v <= 3 ? 'bas' : (v <= 5 ? 'moyen' : 'ok');
       },
-      (v) => `${v}/10 · ${v * 20} bars`, '10 = plein (200 bars)');
+      (v) => `${v}/10 · ${v * 20} bars`, '10 = plein (200 bars)', q.affiche || q.libelle);
     bloc.classList.add('niveau');
     return bloc;
   }
@@ -507,7 +507,7 @@ const Ambulancier = (() => {
       }
       const brute = etat.reponses[q.libelle];
       const vide = brute === undefined || brute === '';
-      if (vide && (q.requis || q.type === 'niveau')) erreurs.push(q.libelle);
+      if (vide && (q.requis || q.type === 'niveau')) erreurs.push(q.affiche || q.libelle);
       if (q.type === 'kilometrage' && erreurKm(brute)) erreurs.push(`kilométrage ${erreurKm(brute).toLowerCase().replace(/\.$/, '')}`);
       if (q.type === 'fait') reponses[q.libelle] = brute === 'Fait' ? 'Fait' : '';
       else if (q.type === 'niveau' || q.type === 'kilometrage') reponses[q.libelle] = vide ? '' : Number(brute);
@@ -525,7 +525,7 @@ const Ambulancier = (() => {
     questionsCourantes().filter(visible).forEach((q) => {
       const r = reponses[q.libelle];
       if (r === '' || r === undefined) return;
-      if (q.type === 'niveau' && r <= SEUILS_ANOMALIE.obus) liste.push(`${q.libelle} : ${r}/10`);
+      if (q.type === 'niveau' && r <= SEUILS_ANOMALIE.obus) liste.push(`${q.affiche || q.libelle} : ${r}/10`);
       if (q.type === 'carburant' && parseInt(r, 10) <= SEUILS_ANOMALIE.carburant) liste.push(`Carburant : ${r}`);
       if (q.libelle === 'Ad-Blue' && r !== 'OK' && r !== q.sinon) liste.push(`Ad-Blue : ${r.toLowerCase()}`);
       if (q.type === 'texte') liste.push(`Remarque : ${r}`);

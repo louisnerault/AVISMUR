@@ -24,6 +24,7 @@
  *   seulementPour: ['F26']  la question n'existe que pour ces véhicules
  *   exclusPour: ['F28']     la question n'est pas posée pour ces véhicules ;
  *                           `sinon` donne alors la réponse enregistrée
+ * `affiche` : texte montré à l'écran à la place du libellé (le libellé reste le nom de colonne).
  * `si: { question, valeur }` n'affiche la question que si une autre a cette réponse.
  */
 
@@ -50,7 +51,7 @@ const ADBLUE = {
   libelle: 'Ad-Blue',
   options: ['OK', 'Niveau à compléter'],
   requis: true,
-  exclusPour: ['F28'],
+  exclusPour: ['F28', 'F23', 'F24'],
   sinon: 'Véhicule non concerné par l\'AdBlue',
 };
 const FIN = [
@@ -142,8 +143,9 @@ const MODELES = {
       { type: 'niveau', libelle: 'Obus 5 Litres n°1' },
       { type: 'niveau', libelle: 'Obus 5 Litres n°2' },
       { type: 'niveau', libelle: 'Obus 15 Litres' },
-      { type: 'niveau', libelle: 'Bouteille oxygène' },
-      { type: 'niveau', libelle: 'Bouteille air' },
+      // La couveuse va avec l'UMH qui fait la DZ : ses bouteilles sont vérifiées ici.
+      { type: 'niveau', libelle: 'Bouteille oxygène', affiche: 'Couveuse : bouteille oxygène' },
+      { type: 'niveau', libelle: 'Bouteille air', affiche: 'Couveuse : bouteille air' },
       {
         type: 'groupe',
         titre: 'Équipement',
