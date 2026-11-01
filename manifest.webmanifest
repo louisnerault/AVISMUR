@@ -3,6 +3,7 @@
   "short_name": "SMUR",
   "description": "Vérifications du matin et traçabilité du SMUR d'Avignon",
   "lang": "fr",
+  "id": "./",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
