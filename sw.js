@@ -1,5 +1,5 @@
 // À incrémenter à chaque mise à jour, avec les ?v= de index.html.
-const CACHE = 'smur-pwa-v21';
+const CACHE = 'smur-pwa-v22';
 const FICHIERS = [
   './', 'index.html', 'style.css?v=12', 'app.js?v=12', 'config.js?v=5', 'checklists.js?v=4', 'ambulancier.js?v=7', 'compteur.js?v=5',
   'manifest.webmanifest',
@@ -15,7 +15,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((cles) => Promise.all(cles.filter((c) => c !== CACHE).map((c) => caches.delete(c))))
+      .then((cles) => Promise.all(cles.filter((c) => c.startsWith('smur-pwa-') && c !== CACHE).map((c) => caches.delete(c))))
       .then(() => self.clients.claim())
   );
 });
