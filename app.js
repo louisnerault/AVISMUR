@@ -146,7 +146,7 @@ async function chargerReleves() {
   const fin = chargement.debut('Chargement des véhicules et des check-lists du jour…');
   try {
     const rep = await appeler('derniersReleves');
-    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts, fileAttente.lire());
+    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts, fileAttente.lire(), rep.infos);
   } catch (err) { /* hors ligne : on garde les derniers relevés connus */ } finally {
     fin();
     Ambulancier.finChargement();
@@ -205,7 +205,7 @@ async function envoyerFileAttente() {
   if (envoiEnCours) return;
   envoiEnCours = true;
   const nb = fileAttente.lire().length;
-  const fin = nb ? chargement.debut(nb > 1 ? `Envoi de ${nb} check-lists…` : 'Envoi de la check-list…') : () => {};
+  const fin = nb ? chargement.debut(nb > 1 ? `Envoi de ${nb} enregistrements…` : 'Envoi en cours…') : () => {};
   let envoyees = 0;
   let erreurServeur = '';
   let avertissement = '';
@@ -215,7 +215,11 @@ async function envoyerFileAttente() {
     while ((suivante = fileAttente.lire().find((e) => !refusees.has(e.id)))) {
       let rep;
       try {
-        rep = await appeler('saveChecklist', {
+        rep = suivante.action === 'enregistrerEvenement'
+          ? await appeler('enregistrerEvenement', {
+            type: suivante.type, vehicule: suivante.vehicule, detail: suivante.detail, idSaisie: suivante.id, dateSaisie: suivante.date,
+          })
+          : await appeler('saveChecklist', {
           liste: suivante.liste,
           items: suivante.items,
           vehicule: suivante.vehicule,
@@ -250,8 +254,8 @@ async function envoyerFileAttente() {
 
 function bilanEnvoi({ envoyees, restantes, erreurServeur, avertissement }) {
   const pieces = [];
-  if (envoyees) pieces.push(`${envoyees} check-list(s) envoyée(s) au serveur.`);
-  if (restantes) pieces.push(`${restantes} check-list(s) gardée(s) sur cet appareil, en attente d'envoi.`);
+  if (envoyees) pieces.push(envoyees > 1 ? `${envoyees} enregistrements envoyés au serveur.` : 'Enregistrement envoyé au serveur.');
+  if (restantes) pieces.push(`${restantes} enregistrement(s) gardé(s) sur cet appareil, en attente d'envoi.`);
   if (erreurServeur) pieces.push(`Refusée par le serveur : ${erreurServeur}`);
   // Check-list bien enregistrée, mais l'ancien Sheet n'a pas suivi : à signaler à l'administrateur.
   if (avertissement) pieces.push(`Attention : ${avertissement}.`);
@@ -432,12 +436,23 @@ function mettreEnFile(saisie) {
     elements.push({ id: identifiantUnique(), date: new Date().toISOString(), ...saisie });
     fileAttente.ecrire(elements);
   } catch (err) {
-    statut('Check-list non enregistrée : la mémoire de l\'appareil est pleine.', 'erreur');
+    statut('Non enregistré : la mémoire de l\'appareil est pleine (trop de photos en attente ?).', 'erreur');
     return false;
   }
   statut('Enregistrement…');
   envoyerFileAttente();
   return true;
+}
+
+/**
+ * Plein, passage au garage ou vérification extérieure : gardé sur l'appareil puis envoyé,
+ * comme les check-lists. Affiché tout de suite sur la case du véhicule.
+ */
+function envoyerEvenement(type, vehicule, detail) {
+  const agent = (session.lire() || {}).identifiant || '';
+  const ok = mettreEnFile({ action: 'enregistrerEvenement', type, vehicule, detail, agent });
+  if (ok) Ambulancier.noterEvenement(type, vehicule, detail, agent);
+  return ok;
 }
 
 function enregistrerAmbulancier() {
@@ -508,6 +523,8 @@ $('vue-plus').addEventListener('click', (e) => {
 
 $('liste').addEventListener('change', (e) => afficherListe(e.target.value));
 $('zone-ambulancier').addEventListener('reponse', annulerConfirmation);
+// Accès pour les écrans d'actions (actions.js).
+window.App = { appeler, envoyerEvenement };
 Ambulancier.initialiser();
 ConfigAdmin.initialiser({ appeler, surEnregistrement: majConfig });
 

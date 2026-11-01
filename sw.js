@@ -1,7 +1,7 @@
 // À incrémenter à chaque mise à jour, avec les ?v= de index.html.
-const CACHE = 'smur-pwa-v34';
+const CACHE = 'smur-pwa-v35';
 const FICHIERS = [
-  './', 'index.html', 'style.css?v=18', 'app.js?v=17', 'config.js?v=5', 'checklists.js?v=9', 'ambulancier.js?v=15', 'config-admin.js?v=3', 'compteur.js?v=5',
+  './', 'index.html', 'style.css?v=19', 'app.js?v=18', 'config.js?v=5', 'checklists.js?v=9', 'ambulancier.js?v=16', 'actions.js?v=1', 'config-admin.js?v=3', 'compteur.js?v=5',
   'manifest.webmanifest',
   'img/logo-smur.png', 'img/logo-cha.png', 'img/icon-192.png', 'img/icon-512.png', 'img/icon-maskable-512.png',
 ];

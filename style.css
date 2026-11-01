@@ -688,3 +688,109 @@ body.camera-ouverte { overflow: hidden; }
 .picto-pompe { width: 1.35rem; height: 1.35rem; fill: none; stroke: var(--erreur); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .picto-pompe .plein { fill: var(--erreur); }
 .picto-pompe .vitre { fill: #fff; stroke: none; }
+
+/* ---------- Grandes cases véhicules ---------- */
+.cartes-vehicules { display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
+@media (min-width: 640px) { .cartes-vehicules { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .cartes-vehicules { grid-template-columns: repeat(3, 1fr); } }
+.vehicule.carte {
+  position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 0.35rem;
+  width: 100%; padding: 0.7rem 0.85rem; text-align: left; font: inherit; color: var(--encre);
+  border: 2px solid; border-radius: var(--rayon); cursor: pointer;
+}
+.vehicule.carte:hover { box-shadow: 0 4px 14px rgb(19 41 75 / 0.15); }
+.vehicule.carte.choisi { outline: 3px solid var(--bleu); outline-offset: 2px; }
+.vehicule.carte.indispo { color: var(--encre); }
+.carte-entete { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.carte-entete .ligne-titre strong { font-size: 1.3rem; }
+.carte-entete .position { display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; text-align: right; }
+.vehicule.indispo .position { color: var(--erreur); }
+.carte-ligne { display: flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; }
+.carte-ligne.alerte { color: var(--erreur); font-weight: 700; }
+.carte-discret { color: var(--gris); font-size: 0.85rem; }
+.carte-cl { font-weight: 700; }
+.pastille-etat { width: 0.75rem; height: 0.75rem; border-radius: 50%; flex-shrink: 0; background: #9AA6B8; }
+.vehicule.fait .pastille-etat { background: var(--rhone); }
+.vehicule.anomalie .pastille-etat { background: var(--orange); }
+.vehicule.indispo .pastille-etat { background: var(--erreur); }
+.carte-picto { width: 1.4rem; text-align: center; flex-shrink: 0; font-weight: 700; font-size: 0.85rem; }
+.vehicule.carte .pompe-plein { position: static; width: 1.4rem; display: inline-flex; justify-content: center; }
+.jauge-mini { display: inline-flex; gap: 2px; }
+.jauge-mini span { width: 0.6rem; height: 0.85rem; border-radius: 2px; background: rgb(19 41 75 / 0.12); }
+.jauge-mini span.plein { background: var(--rhone); }
+.jauge-mini.bas span.plein { background: var(--erreur); }
+.niveau-mini { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.niveau-mini-barre { position: relative; width: 1.6rem; height: 0.6rem; border-radius: 3px; background: rgb(19 41 75 / 0.12); overflow: hidden; }
+.niveau-mini-barre::after { content: ''; position: absolute; inset: 0 auto 0 0; width: calc(var(--niveau) * 100%); background: var(--rhone); }
+.niveau-mini.bas { color: var(--erreur); font-weight: 700; }
+.niveau-mini.bas .niveau-mini-barre::after { background: var(--erreur); }
+.vehicule.carte .en-cours { margin-left: auto; color: var(--orange); font-weight: 700; }
+.vehicule.carte .infobulle { bottom: auto; top: calc(100% + 6px); }
+
+/* ---------- Fenêtre d'actions ---------- */
+body.fenetre-ouverte { overflow: hidden; }
+.fenetre-fond { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; background: rgb(19 41 75 / 0.45); }
+.fenetre {
+  width: 100%; max-width: 40rem; max-height: 92vh; max-height: 92dvh; overflow: auto;
+  background: #fff; border-radius: 20px 20px 0 0; padding: 0 1.1rem max(1.2rem, env(safe-area-inset-bottom));
+}
+@media (min-width: 640px) { .fenetre-fond { align-items: center; } .fenetre { border-radius: 20px; } }
+.fenetre-entete { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0 0.6rem; background: #fff; }
+.fenetre-entete h2 { margin: 0; font-size: 1.25rem; }
+.fenetre-fermer { width: 2.6rem; height: 2.6rem; flex-shrink: 0; font-size: 1.2rem; background: var(--ciel); border: 0; border-radius: 50%; }
+.fenetre-resume { margin: 0 0 0.8rem; color: var(--gris); }
+.actions { display: grid; gap: 0.5rem; }
+.action { display: flex; align-items: center; gap: 0.8rem; width: 100%; padding: 0.75rem 0.9rem; text-align: left; font: inherit; color: var(--encre); background: var(--ciel); border: 2px solid transparent; border-radius: var(--rayon); }
+.action:hover { border-color: var(--bleu); }
+.action-principale { color: #fff; background: var(--bleu); }
+.action-principale .action-texte small { color: #DCE7F7; }
+.action-icone { font-size: 1.5rem; width: 2rem; text-align: center; }
+.action-texte { display: flex; flex-direction: column; }
+.action-texte small { color: var(--gris); }
+.fenetre .principal { margin-top: 0.8rem; }
+.fenetre .lien { margin-top: 0.8rem; }
+.lien.danger { color: var(--erreur); }
+.reponses { margin: 0.6rem 0; }
+.reponse { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid #E1E8F2; }
+.reponse dt { font-weight: 400; }
+.reponse dd { margin: 0; font-weight: 700; text-align: right; }
+.reponse.manquant dd { color: var(--erreur); }
+.champ-photo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.6rem 0; }
+.champ-photo .bouton-photo { min-height: 2.8rem; cursor: pointer; }
+.photo-apercu { display: block; max-width: 100%; max-height: 14rem; border-radius: 8px; border: 1px solid var(--trait); }
+
+/* Vérification extérieure */
+.faces { margin: 0.6rem 0; }
+.face { padding: 0.45rem 0.8rem; font: inherit; font-weight: 700; color: var(--bleu); background: #fff; border: 2px solid var(--trait); border-radius: 999px; }
+.face.active { color: #fff; background: var(--bleu); border-color: var(--bleu); }
+.schema { position: relative; margin: 0.4rem auto; cursor: crosshair; touch-action: manipulation; }
+.schema-cote { width: 100%; aspect-ratio: 2 / 1; }
+.schema-face { width: min(100%, 22rem); aspect-ratio: 6 / 5; }
+.silhouette { position: absolute; inset: 0; width: 100%; height: 100%; }
+.silhouette .carrosserie { fill: #F4F7FB; stroke: var(--encre); stroke-width: 1.5; }
+.silhouette .vitre { fill: #CFE0F3; stroke: var(--encre); stroke-width: 1; }
+.silhouette .bande { fill: none; stroke: var(--orange); stroke-width: 3; }
+.silhouette .phare { fill: #FFE7A8; stroke: var(--encre); stroke-width: 1; }
+.silhouette .gyro { fill: #5B8FE0; }
+.silhouette .joint { stroke: var(--encre); stroke-width: 1; }
+.silhouette .roue { fill: #3A4A63; }
+.marque {
+  position: absolute; z-index: 1; width: 1.8rem; height: 1.8rem; margin: -0.9rem 0 0 -0.9rem;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;
+  color: #fff; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+}
+.marque.connu { background: #6B7A92; }
+.marque.nouveau { background: var(--erreur); }
+.marque.repare { background: var(--rhone); }
+.legende-schema { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--gris); }
+.legende-schema .marque { position: static; margin: 0; width: 1.3rem; height: 1.3rem; font-size: 0.7rem; }
+.defaut-detail { margin: 0.6rem 0; padding: 0.6rem 0.8rem; background: #F6F9FD; border: 1px solid var(--trait); border-radius: var(--rayon); }
+.defaut-detail h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+
+/* Historique */
+.historique { list-style: none; margin: 0; padding: 0; }
+.historique .entree { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.6rem 0; border-bottom: 1px solid #E1E8F2; }
+.historique .entree-titre { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
+.historique .entree-titre span { color: var(--gris); font-size: 0.85rem; }
+.historique .entree.anomalie strong { color: var(--orange); }
+.historique .entree .lien { margin: 0; align-self: flex-start; }
