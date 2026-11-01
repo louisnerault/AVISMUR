@@ -120,11 +120,14 @@ function afficherApplication(infos) {
 
 /** Configuration des véhicules et des questions, si un administrateur l'a modifiée. */
 async function chargerConfig() {
+  const fin = chargement.debut('Chargement de la configuration…');
   try {
     const rep = await appeler('lireConfig');
     if (!rep.ok) return;
     majConfig(rep.configuration ? rep.configuration.config : null);
-  } catch (err) { /* hors ligne : on garde la configuration enregistrée sur l'appareil */ }
+  } catch (err) { /* hors ligne : on garde la configuration enregistrée sur l'appareil */ } finally {
+    fin();
+  }
 }
 
 function majConfig(config) {
@@ -140,11 +143,43 @@ function majConfig(config) {
 
 /** Derniers kilométrages et état du parc du jour, gardés sur l'appareil pour le hors ligne. */
 async function chargerReleves() {
+  const fin = chargement.debut('Chargement des véhicules et des check-lists du jour…');
   try {
     const rep = await appeler('derniersReleves');
     if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts, fileAttente.lire());
-  } catch (err) { /* hors ligne : on garde les derniers relevés connus */ }
+  } catch (err) { /* hors ligne : on garde les derniers relevés connus */ } finally {
+    fin();
+    Ambulancier.finChargement();
+  }
 }
+
+/**
+ * Animation de chargement (tracé ECG) pendant les échanges avec le serveur.
+ * Plusieurs chargements peuvent se chevaucher : on affiche le message du plus récent
+ * et on cache l'animation quand tous sont terminés.
+ */
+const chargement = (() => {
+  const enCours = [];
+  const afficher = () => {
+    const zone = $('chargement');
+    zone.hidden = enCours.length === 0;
+    if (enCours.length) $('chargement-texte').textContent = enCours[enCours.length - 1].texte;
+  };
+  return {
+    debut(texte) {
+      const tache = { texte };
+      enCours.push(tache);
+      afficher();
+      let termine = false;
+      return () => {
+        if (termine) return;
+        termine = true;
+        enCours.splice(enCours.indexOf(tache), 1);
+        afficher();
+      };
+    },
+  };
+})();
 
 // ---------- File d'attente hors ligne ----------
 // Chaque check-list est d'abord gardée sur l'appareil, puis envoyée au serveur.
@@ -169,6 +204,8 @@ function identifiantUnique() {
 async function envoyerFileAttente() {
   if (envoiEnCours) return;
   envoiEnCours = true;
+  const nb = fileAttente.lire().length;
+  const fin = nb ? chargement.debut(nb > 1 ? `Envoi de ${nb} check-lists…` : 'Envoi de la check-list…') : () => {};
   let envoyees = 0;
   let erreurServeur = '';
   let avertissement = '';
@@ -202,6 +239,7 @@ async function envoyerFileAttente() {
     }
   } finally {
     envoiEnCours = false;
+    fin();
   }
   if (envoyees) chargerReleves();
   bilanEnvoi({ envoyees, restantes: fileAttente.lire().length, erreurServeur, avertissement });

@@ -10,6 +10,7 @@ const Ambulancier = (() => {
   const CLE_PARC = 'smur_etat_parc';
   const CLE_STATUTS = 'smur_statuts_jour';
   const etat = { vehicule: null, reponses: {} };
+  let chargementTermine = false;
   let zoneVehicules;
   let zoneQuestions;
   let titre;
@@ -344,7 +345,8 @@ const Ambulancier = (() => {
     const parc = lireStockage(CLE_PARC);
     const avis = document.getElementById('avis-parc');
     if (avis) {
-      avis.hidden = parc.date === aujourdhui();
+      // Pas d'avis tant que le chargement depuis le serveur n'est pas terminé.
+      avis.hidden = !chargementTermine || parc.date === aujourdhui();
       avis.textContent = parc.date
         ? `État du parc du jour pas encore reçu (dernier reçu : ${parc.date.split('-').reverse().join('/')}). Disponibilités et positions non affichées.`
         : 'État du parc non reçu : disponibilités et positions non affichées.';
@@ -607,5 +609,11 @@ const Ambulancier = (() => {
     rendreQuestions();
   }
 
-  return { initialiser, afficher: () => { rendreVehicules(); rendreQuestions(); }, lire, terminer, majReleves };
+  /** Fin du chargement depuis le serveur (réussi ou non : hors ligne, on montre les avis). */
+  function finChargement() {
+    chargementTermine = true;
+    rendreVehicules();
+  }
+
+  return { initialiser, finChargement, afficher: () => { rendreVehicules(); rendreQuestions(); }, lire, terminer, majReleves };
 })();

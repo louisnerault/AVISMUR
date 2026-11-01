@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -132,6 +132,13 @@
 
     <!-- Application -->
     <section id="ecran-checklist" class="application" hidden>
+      <!-- Animation pendant les échanges avec le serveur -->
+      <div id="chargement" class="chargement" role="status" aria-live="polite" hidden>
+        <svg viewBox="0 0 120 30" aria-hidden="true" focusable="false">
+          <path d="M0 18 H38 l4 -4 l4 4 h6 l4 6 l6 -22 l6 26 l4 -10 h8 q6 -8 12 0 H120" />
+        </svg>
+        <span id="chargement-texte">Chargement…</span>
+      </div>
       <div id="choix-liste" class="champ">
         <label for="liste">Check-list</label>
         <select id="liste">
@@ -174,8 +181,8 @@
   <script src="config.js?v=5"></script>
   <script src="checklists.js?v=8"></script>
   <script src="compteur.js?v=5"></script>
-  <script src="ambulancier.js?v=11"></script>
+  <script src="ambulancier.js?v=12"></script>
   <script src="config-admin.js?v=1"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

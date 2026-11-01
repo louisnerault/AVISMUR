@@ -609,3 +609,21 @@ body.camera-ouverte { overflow: hidden; }
 .cfg-ajout select { flex: 1 1 14rem; }
 .cfg-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1.5rem; }
 .cfg-actions .principal { width: auto; flex: 1 1 16rem; margin: 0; }
+
+/* ---------- Animation de chargement ---------- */
+.chargement {
+  position: sticky; top: 0; z-index: 3;
+  display: flex; align-items: center; gap: 0.7rem;
+  margin: 0 0 1rem; padding: 0.55rem 0.9rem;
+  font-weight: 700; color: var(--bleu);
+  background: var(--ciel); border: 1px solid var(--trait); border-radius: var(--rayon);
+}
+.chargement svg { width: 4.5rem; height: 1.3rem; flex-shrink: 0; overflow: visible; }
+.chargement path {
+  fill: none; stroke: var(--rhone); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 60 200; animation: pouls 1.2s linear infinite;
+}
+@keyframes pouls { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .chargement path { animation: none; stroke-dasharray: none; }
+}
