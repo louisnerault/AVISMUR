@@ -358,7 +358,7 @@ const Ambulancier = (() => {
       radio.addEventListener('change', () => choisirVehicule(v.id));
 
       const etiquette = el('label', { for: id, classe: `vehicule ${etatV.classe}` },
-        el('span', { classe: 'ligne-titre' }, el('strong', { texte: v.id }), el('small', { texte: v.modele === 'F00' ? 'UMH' : v.modele })));
+        el('span', { classe: 'ligne-titre' }, el('strong', { texte: v.nom || v.id }), el('small', { texte: v.type !== undefined ? v.type : (v.modele === 'F00' ? 'UMH' : v.modele) })));
       // Position du jour : hélicoptère pour la DZ, sinon le départ (1er départ PRIMAIRE…).
       if (etatV.classe === 'indispo') {
         etiquette.append(el('small', { classe: 'position', texte: 'Non disponible' }));
@@ -398,7 +398,7 @@ const Ambulancier = (() => {
     const modele = modeleCourant();
     titre.textContent = v.modele === 'UMH' && modele === 'F00'
       ? `${v.id} · en DZ, fait office de F00`
-      : `${v.id} · ${MODELES[modele].titre}`;
+      : (v.nom ? v.nom : `${v.id} · ${MODELES[modele].titre}`);
     const position = positionDuJour(v.id);
     if (position && (estDZ(position) || estHS(position))) {
       const texte = estHS(position)

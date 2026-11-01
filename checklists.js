@@ -44,6 +44,7 @@ const VEHICULES = [
   { id: 'F25', modele: 'UMH' },
   { id: 'F26', modele: 'UMH' },
   { id: 'F00', modele: 'F00', libelle: 'F00 · ambulance HELICO' },
+  { id: 'COUVEUSE', modele: 'COUVEUSE', nom: 'Couveuse', type: '' },
 ];
 
 const ADBLUE = {
@@ -137,15 +138,23 @@ const MODELES = {
     ],
   },
 
+  // Couveuse : vérifiée à part. Ses bouteilles sont reportées dans la ligne F00 du jour
+  // de l'ancien Sheet (libellés = noms de colonnes, ne pas les modifier).
+  COUVEUSE: {
+    titre: 'Couveuse',
+    questions: [
+      { type: 'niveau', libelle: 'Bouteille oxygène' },
+      { type: 'niveau', libelle: 'Bouteille air' },
+      { type: 'texte', libelle: 'Remarques' },
+    ],
+  },
+
   F00: {
     titre: 'F00 · ambulance HELICO',
     questions: [
       { type: 'niveau', libelle: 'Obus 5 Litres n°1' },
       { type: 'niveau', libelle: 'Obus 5 Litres n°2' },
       { type: 'niveau', libelle: 'Obus 15 Litres' },
-      // La couveuse va avec l'UMH qui fait la DZ : ses bouteilles sont vérifiées ici.
-      { type: 'niveau', libelle: 'Bouteille oxygène', affiche: 'Couveuse : bouteille oxygène' },
-      { type: 'niveau', libelle: 'Bouteille air', affiche: 'Couveuse : bouteille air' },
       {
         type: 'groupe',
         titre: 'Équipement',
