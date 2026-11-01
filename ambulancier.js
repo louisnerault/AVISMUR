@@ -322,6 +322,15 @@ const Ambulancier = (() => {
 
   function rendreVehicules() {
     zoneVehicules.innerHTML = '';
+    // Sans état du parc du jour, les positions et les véhicules indisponibles ne peuvent pas s'afficher.
+    const parc = lireStockage(CLE_PARC);
+    const avis = document.getElementById('avis-parc');
+    if (avis) {
+      avis.hidden = parc.date === aujourdhui();
+      avis.textContent = parc.date
+        ? `État du parc du jour pas encore reçu (dernier reçu : ${parc.date.split('-').reverse().join('/')}). Disponibilités et positions non affichées.`
+        : 'État du parc non reçu : disponibilités et positions non affichées.';
+    }
     const nom = nouvelId();
     VEHICULES.forEach((v) => {
       const id = nouvelId();

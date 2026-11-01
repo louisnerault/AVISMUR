@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -137,6 +137,7 @@
         <h1>Vérification du véhicule</h1>
         <fieldset class="question">
           <legend>Véhicule vérifié</legend>
+          <p id="avis-parc" class="avis-parc" hidden></p>
           <div id="vehicules" class="puces puces-vehicules"></div>
         </fieldset>
         <h2 id="titre-vehicule" class="titre-vehicule" tabindex="-1"></h2>
@@ -160,7 +161,7 @@
 
   <script src="config.js?v=5"></script>
   <script src="checklists.js?v=4"></script>
-  <script src="ambulancier.js?v=4"></script>
+  <script src="ambulancier.js?v=5"></script>
   <script src="app.js?v=10"></script>
 </body>
 </html>

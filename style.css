@@ -522,3 +522,5 @@ body.connecte .envoi {
 @media (prefers-reduced-motion: reduce) {
   .ecg { animation: none; }
 }
+
+.avis-parc { margin: 0 0 0.6rem; font-size: 0.9rem; color: var(--gris); font-style: italic; }
