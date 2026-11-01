@@ -83,8 +83,8 @@ const Actions = (() => {
           () => { fermer(); Ambulancier.ouvrirChecklist(v.id); }, true),
         action('👁️', 'Voir la dernière check-list', info.derniereCL ? `${date(info.derniereCL.date)} · ${info.derniereCL.agent}` : 'Aucune check-list enregistrée',
           () => voirCheckList(v, info, etatV, info.derniereCL)),
-        action('⛽', 'Signaler un plein', info.dernierPlein ? `Dernier : ${date(info.dernierPlein.date)}` : 'Carburant, AdBlue, ticket', () => plein(v, info, etatV)),
-        action('🚐', 'Vérification extérieure', info.defauts.length ? `${info.defauts.length} défaut(s) connu(s)` : 'Carrosserie : rayures, impacts', () => exterieur(v, info, etatV)),
+        v.sansPlein ? null : action('⛽', 'Signaler un plein', info.dernierPlein ? `Dernier : ${date(info.dernierPlein.date)}` : 'Carburant, AdBlue, ticket', () => plein(v, info, etatV)),
+        v.sansExterieur ? null : action('🚐', 'Vérification extérieure', info.defauts.length ? `${info.defauts.length} défaut(s) connu(s)` : 'Carrosserie : rayures, impacts', () => exterieur(v, info, etatV)),
         v.sansGarage ? null : action('🔧', 'Passage au garage', info.dernierGarage ? `Dernier : ${date(info.dernierGarage.date)}` : 'Entretien, réparation, contrôle', () => garage(v, info, etatV)),
         action('🕘', 'Historique du véhicule', 'Check-lists, pleins, garage, carrosserie', () => historique(v, info, etatV))));
   }

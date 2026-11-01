@@ -433,7 +433,7 @@ const Ambulancier = (() => {
     }
 
     // Carburant : petit cadran à aiguille
-    const carb = carburantActuel(info);
+    const carb = v.sansPlein ? null : carburantActuel(info);
     if (carb) {
       const bas = carb.valeur <= SEUILS_ANOMALIE.plein;
       bouton.append(el('span', { classe: `carte-ligne carte-carburant${bas ? ' alerte' : ''}`, title: `Carburant ${carb.valeur}/8 (${carb.source})` },
@@ -446,7 +446,7 @@ const Ambulancier = (() => {
     if (!v.sansGarage) bouton.append(el('span', { classe: 'carte-ligne carte-discret' },
       el('span', { classe: 'carte-picto', 'aria-hidden': 'true', texte: '🔧' }),
       el('span', { texte: g ? `Garage : ${jourCourt(g.date)}${g.motif ? ` · ${g.motif}` : ''}` : 'Garage : aucun passage enregistré' })));
-    if (info.defauts.length) {
+    if (info.defauts.length && !v.sansExterieur) {
       bouton.append(el('span', { classe: 'carte-ligne carte-discret' }, el('span', { classe: 'carte-picto', 'aria-hidden': 'true', texte: '🚩' }),
         el('span', { texte: `${info.defauts.length} défaut${info.defauts.length > 1 ? 's' : ''} de carrosserie connu${info.defauts.length > 1 ? 's' : ''}` })));
     }
