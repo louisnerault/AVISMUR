@@ -72,7 +72,7 @@ function afficherApplication(infos) {
 async function chargerReleves() {
   try {
     const rep = await appeler('derniersReleves');
-    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts);
+    if (rep.ok) Ambulancier.majReleves(rep.releves, rep.parc, rep.statuts, fileAttente.lire());
   } catch (err) { /* hors ligne : on garde les derniers relevés connus */ }
 }
 
@@ -326,6 +326,7 @@ function enregistrerAmbulancier() {
   }
   const ok = mettreEnFile({
     liste: 'ambulancier', vehicule: saisie.vehicule, modele: saisie.modele, items: saisie.reponses, anomalies: saisie.anomalies,
+    agent: (session.lire() || {}).identifiant,
   });
   if (!ok) return;
   confirmationDemandee = false;

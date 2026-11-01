@@ -554,9 +554,22 @@ const Ambulancier = (() => {
   }
 
   /** Derniers kilométrages, état du parc et check-lists du jour reçus du serveur. */
-  function majReleves(nouveaux, parc, statuts) {
+  /**
+   * `enAttente` : check-lists gardées sur l'appareil, pas encore reçues par le serveur.
+   * Le serveur fait foi (une ligne supprimée dans Historique disparaît de l'appli) ;
+   * on y ajoute seulement ce qui attend encore l'envoi.
+   */
+  function majReleves(nouveaux, parc, statuts, enAttente = []) {
     releves.fusionner(nouveaux);
-    fusionnerStatuts(statuts);
+    if (statuts && statuts.jour === aujourdhui()) {
+      ecrireStockage(CLE_STATUTS, { jour: aujourdhui(), vehicules: { ...(statuts.vehicules || {}) } });
+      enAttente
+        .filter((e) => e.liste === 'ambulancier' && e.vehicule && new Date(e.date).toLocaleDateString('fr-CA') === aujourdhui())
+        .forEach((e) => fusionnerStatuts({
+          jour: aujourdhui(),
+          vehicules: { [e.vehicule]: { date: e.date, agent: e.agent || '', anomalies: e.anomalies || [], reponses: e.items || {} } },
+        }));
+    }
     if (parc && parc.date) ecrireStockage(CLE_PARC, parc);
     rendreVehicules();
     const champ = zoneQuestions && zoneQuestions.querySelector('.saisie-km');
