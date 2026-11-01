@@ -74,6 +74,9 @@ const ConfigAdmin = (() => {
           el('input', { type: 'checkbox', id: idActif, checked: !v.inactif,
             surchange: (e) => { if (e.target.checked) delete v.inactif; else v.inactif = true; rendre(); } }),
           el('span', { texte: 'Actif' })),
+        el('label', { classe: 'cfg-actif', title: 'Décocher si ce véhicule ne va jamais au garage (ex. couveuse)' },
+          el('input', { type: 'checkbox', checked: !v.sansGarage, surchange: (e) => { if (e.target.checked) delete v.sansGarage; else v.sansGarage = true; } }),
+          el('span', { texte: 'Garage' })),
         el('input', { classe: 'cfg-indicatif', valeur: v.id, 'aria-label': 'Indicatif', placeholder: 'F27',
           surinput: (e) => { v.id = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); e.target.value = v.id; } }),
         modele,
@@ -87,7 +90,7 @@ const ConfigAdmin = (() => {
     });
     return el('section', { classe: 'cfg-section' },
       el('h2', { texte: 'Véhicules' }),
-      el('p', { classe: 'aide-question', texte: 'Indicatif, modèle de check-list, nom affiché et icône (facultatifs). L\'ordre est celui des cases dans l\'appli. Un véhicule décoché (« Actif ») n\'apparaît plus, sans perdre sa configuration.' }),
+      el('p', { classe: 'aide-question', texte: 'Indicatif, modèle de check-list, nom affiché et icône (facultatifs). L\'ordre est celui des cases dans l\'appli. Un véhicule décoché (« Actif ») n\'apparaît plus, sans perdre sa configuration. « Garage » décoché : pas de passage au garage pour ce véhicule.' }),
       table,
       bouton('+ Ajouter un véhicule', () => {
         brouillon.vehicules.push({ id: '', modele: Object.keys(brouillon.modeles)[0] });

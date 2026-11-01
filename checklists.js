@@ -10,6 +10,8 @@
  * espaces : « Boîte à gants [Boîte à ampoules] » correspond à « Boîte à gants [BOITE A AMPOULES] ».
  * Quand l'en-tête du Sheet est différent (faute de frappe…), on le précise avec `colonne`.
  *
+ * Véhicules : `sansGarage: true` retire le passage au garage (case et menu d'actions).
+ *
  * Types de questions :
  *   niveau      : obus / bouteille, curseur de 0 à 10 (10 = plein, 200 bars)
  *   carburant   : jauge, curseur de 0 à 8 (enregistré « 6/8 »)
@@ -45,7 +47,7 @@ let VEHICULES = [
   { id: 'F25', modele: 'UMH' },
   { id: 'F26', modele: 'UMH' },
   { id: 'F00', modele: 'F00', libelle: 'F00 · ambulance HELICO' },
-  { id: 'COUVEUSE', modele: 'COUVEUSE', nom: 'Couveuse', type: '', icone: '👶' },
+  { id: 'COUVEUSE', modele: 'COUVEUSE', nom: 'Couveuse', type: '', icone: '👶', sansGarage: true },
 ];
 
 const ADBLUE = {

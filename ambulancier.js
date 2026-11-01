@@ -443,7 +443,7 @@ const Ambulancier = (() => {
 
     // Garage et carrosserie
     const g = info.dernierGarage;
-    bouton.append(el('span', { classe: 'carte-ligne carte-discret' },
+    if (!v.sansGarage) bouton.append(el('span', { classe: 'carte-ligne carte-discret' },
       el('span', { classe: 'carte-picto', 'aria-hidden': 'true', texte: '🔧' }),
       el('span', { texte: g ? `Garage : ${jourCourt(g.date)}${g.motif ? ` · ${g.motif}` : ''}` : 'Garage : aucun passage enregistré' })));
     if (info.defauts.length) {
