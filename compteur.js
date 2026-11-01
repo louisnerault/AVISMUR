@@ -40,13 +40,8 @@ const Compteur = (() => {
     return chargement;
   }
 
-  /**
-   * Image du cadre de visée en niveaux de gris, contraste étiré, agrandie.
-   * Pas de passage en noir et blanc ici : Tesseract le fait mieux lui-même, et un seuil
-   * trop brutal fond les chiffres en une seule tache. On fournit aussi la version
-   * inversée, pour les compteurs à chiffres clairs sur fond sombre.
-   */
-  function imagesDuCadre(video, cadre) {
+  /** Niveaux de gris du cadre de visée, agrandis à une hauteur fixe. */
+  function grisDuCadre(video, cadre) {
     const vr = video.getBoundingClientRect();
     const cr = cadre.getBoundingClientRect();
     // La vidéo remplit l'écran en « cover » : on retrouve la zone correspondante dans l'image source.
@@ -60,51 +55,70 @@ const Compteur = (() => {
 
     const hauteur = 160;
     const largeur = Math.round((sw / sh) * hauteur);
-    const normale = document.createElement('canvas');
-    normale.width = largeur;
-    normale.height = hauteur;
-    const ctx = normale.getContext('2d', { willReadFrequently: true });
+    const canvas = document.createElement('canvas');
+    canvas.width = largeur;
+    canvas.height = hauteur;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, largeur, hauteur);
-
-    const img = ctx.getImageData(0, 0, largeur, hauteur);
-    const px = img.data;
-    // Niveaux de gris puis étirement entre les 2 % les plus sombres et les 2 % les plus clairs.
-    const histo = new Array(256).fill(0);
-    for (let i = 0; i < px.length; i += 4) {
-      const g = Math.round(0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]);
-      px[i] = g;
-      histo[g] += 1;
+    const px = ctx.getImageData(0, 0, largeur, hauteur).data;
+    const gris = new Uint8ClampedArray(largeur * hauteur);
+    for (let i = 0, j = 0; i < px.length; i += 4, j += 1) {
+      gris[j] = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
     }
-    const total = px.length / 4;
-    let bas = 0;
-    let haut = 255;
-    for (let cumul = 0; bas < 255 && (cumul += histo[bas]) < total * 0.02; bas += 1);
-    for (let cumul = 0; haut > 0 && (cumul += histo[haut]) < total * 0.02; haut -= 1);
-    const etendue = Math.max(haut - bas, 1);
-    const inverse = ctx.createImageData(largeur, hauteur);
-    for (let i = 0; i < px.length; i += 4) {
-      const v = Math.max(0, Math.min(255, ((px[i] - bas) * 255) / etendue));
-      px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
-      inverse.data[i] = 255 - v; inverse.data[i + 1] = 255 - v; inverse.data[i + 2] = 255 - v; inverse.data[i + 3] = 255;
-    }
-    ctx.putImageData(img, 0, 0);
-    const inversee = document.createElement('canvas');
-    inversee.width = largeur;
-    inversee.height = hauteur;
-    inversee.getContext('2d').putImageData(inverse, 0, 0);
-    return [normale, inversee];
+    const tries = Uint8ClampedArray.from(gris).sort();
+    return { gris, tries, largeur, hauteur };
   }
 
-  /** Nombre le plus vraisemblable dans le texte lu (4 à 7 chiffres, proche du dernier relevé). */
-  function choisirValeur(texte, precedent) {
-    const nombres = (String(texte).replace(/\s+/g, '').match(/\d{4,7}/g) || []).map(Number);
-    if (!nombres.length) return null;
-    if (precedent) {
-      const plausibles = nombres.filter((n) => n >= precedent && n - precedent <= ECART_MAX_KM);
-      if (plausibles.length) return plausibles[0];
+  /**
+   * Image noir sur blanc pour le moteur. Les chiffres d'un compteur sont les pixels
+   * les plus clairs (ou les plus sombres) de la zone : on garde ceux au-delà d'un rang
+   * donné (`part`), quelle que soit la lumière. Marge blanche autour, comme sur une page.
+   */
+  function imageSeuil({ gris, tries, largeur, hauteur }, chiffresClairs, part) {
+    const seuil = tries[Math.floor(part * (tries.length - 1))];
+    const marge = 20;
+    const canvas = document.createElement('canvas');
+    canvas.width = largeur + 2 * marge;
+    canvas.height = hauteur + 2 * marge;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const img = ctx.createImageData(largeur, hauteur);
+    for (let j = 0; j < gris.length; j += 1) {
+      const chiffre = chiffresClairs ? gris[j] > seuil : gris[j] < seuil;
+      const v = chiffre ? 0 : 255;
+      const i = j * 4;
+      img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v; img.data[i + 3] = 255;
     }
-    return nombres.sort((a, b) => String(b).length - String(a).length)[0];
+    ctx.putImageData(img, marge, marge);
+    return canvas;
+  }
+
+  // Essais successifs : chiffres clairs (cas le plus courant), puis chiffres sombres.
+  const ESSAIS = [[true, 0.85], [true, 0.80], [true, 0.92], [false, 0.15], [false, 0.20]];
+
+  /**
+   * Nombre le plus vraisemblable dans le texte lu. Un compteur affiche 4 à 7 chiffres ;
+   * le moteur ajoute parfois un chiffre parasite (le « k » de « km » lu comme un 1) :
+   * on essaie aussi les débuts de chaque suite de chiffres et on retient celui qui suit
+   * le dernier relevé.
+   */
+  function choisirValeur(texte, precedent) {
+    const suites = String(texte).replace(/[^\d\n]/g, '').split('\n').filter((x) => x.length >= 4);
+    if (!suites.length) return null;
+    if (precedent) {
+      let meilleur = null;
+      suites.forEach((suite) => {
+        for (let n = 4; n <= Math.min(7, suite.length); n += 1) {
+          const v = Number(suite.slice(0, n));
+          if (v >= precedent && v - precedent <= ECART_MAX_KM && (meilleur === null || v - precedent < meilleur - precedent)) meilleur = v;
+        }
+      });
+      if (meilleur !== null) return meilleur;
+    }
+    const longue = suites.sort((a, b) => b.length - a.length)[0];
+    return Number(longue.slice(0, 7));
   }
 
   const plausible = (n, precedent) => n !== null && (!precedent || (n >= precedent && n - precedent <= ECART_MAX_KM));
@@ -192,13 +206,16 @@ const Compteur = (() => {
         if (occupe || fini || !video.videoWidth) return;
         occupe = true;
         try {
-          const [image, inversee] = imagesDuCadre(video, cadre);
+          const zone = grisDuCadre(video, cadre);
           const w = await preparerMoteur();
-          if (fini) return;
-          let valeur = choisirValeur((await w.recognize(image)).data.text, precedent);
-          if (!plausible(valeur, precedent) && !fini) {
-            const autre = choisirValeur((await w.recognize(inversee)).data.text, precedent);
-            if (autre !== null && (valeur === null || plausible(autre, precedent))) valeur = autre;
+          let valeur = null;
+          let image = imageSeuil(zone, ESSAIS[0][0], ESSAIS[0][1]);
+          for (const [clairs, part] of ESSAIS) {
+            if (fini) return;
+            const essai = imageSeuil(zone, clairs, part);
+            const v = choisirValeur((await w.recognize(essai)).data.text, precedent);
+            if (v !== null && (valeur === null || plausible(v, precedent))) { valeur = v; image = essai; }
+            if (plausible(valeur, precedent)) break;
           }
           if (fini) return;
           if (manuel) {
