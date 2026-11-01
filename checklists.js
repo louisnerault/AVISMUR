@@ -44,7 +44,7 @@ const VEHICULES = [
   { id: 'F25', modele: 'UMH' },
   { id: 'F26', modele: 'UMH' },
   { id: 'F00', modele: 'F00', libelle: 'F00 · ambulance HELICO' },
-  { id: 'COUVEUSE', modele: 'COUVEUSE', nom: 'Couveuse', type: '' },
+  { id: 'COUVEUSE', modele: 'COUVEUSE', nom: 'Couveuse', type: '', icone: '👶' },
 ];
 
 const ADBLUE = {

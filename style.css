@@ -582,3 +582,5 @@ body.camera-ouverte { overflow: hidden; }
 .case-rester input { width: 1.4rem; height: 1.4rem; min-height: 0; margin: 0.1rem 0 0; flex-shrink: 0; accent-color: var(--bleu); }
 .case-rester span { font-weight: 700; }
 .case-rester small { display: block; margin-top: 0.15rem; font-size: 0.9rem; font-weight: 400; color: var(--gris); }
+
+.vehicule .icone-vehicule { font-size: 1.5rem; line-height: 1; }

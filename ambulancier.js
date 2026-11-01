@@ -367,6 +367,7 @@ const Ambulancier = (() => {
       } else if (etatV.position && etatV.position.position) {
         etiquette.append(el('small', { classe: 'position', texte: etatV.position.position }));
       }
+      if (v.icone) etiquette.append(el('span', { classe: 'icone-vehicule', 'aria-hidden': 'true', texte: v.icone }));
       if (Object.keys(brouillons.lire(v.id)).length) etiquette.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
 
       // Infobulle : qui a fait la check-list et ses anomalies.
