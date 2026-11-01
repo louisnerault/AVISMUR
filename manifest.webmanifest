@@ -3,7 +3,7 @@
   "short_name": "SMUR",
   "description": "Vérifications du matin et traçabilité du SMUR d'Avignon",
   "lang": "fr",
-  "id": "https://louisnerault.github.io/AVISMUR/",
+  "id": "https://louisnerault.github.io/AVISMUR/app",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
