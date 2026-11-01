@@ -33,6 +33,7 @@
 const SEUILS_ANOMALIE = {
   obus: 3, // sur 10 (3 = 60 bars)
   carburant: 2, // sur 8 (un quart)
+  plein: 5, // sur 8 : à ce niveau ou en dessous, pompe rouge sur la case du véhicule (plein à faire)
 };
 
 let VEHICULES = [

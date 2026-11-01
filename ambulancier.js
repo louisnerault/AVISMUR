@@ -323,6 +323,12 @@ const Ambulancier = (() => {
     }
   }
 
+  /** Pictogramme pompe à essence (plein à faire). */
+  const pompe = () => el('svg:svg', { viewBox: '0 0 24 24', classe: 'picto-pompe', 'aria-hidden': 'true' },
+    el('svg:path', { d: 'M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16z', classe: 'plein' }),
+    el('svg:path', { d: 'M6.5 6h6v4h-6z', classe: 'vitre' }),
+    el('svg:path', { d: 'M2.5 21h14M15 8h2a2 2 0 0 1 2 2v7a1.5 1.5 0 0 0 3 0V8l-3-3' }));
+
   /** Pictogramme hélicoptère (UMH en DZ). */
   const helico = () => el('svg:svg', { viewBox: '0 0 32 20', classe: 'picto-helico', 'aria-hidden': 'true' },
     el('svg:path', { d: 'M4 2h22M15 2v3' }),
@@ -375,6 +381,12 @@ const Ambulancier = (() => {
         etiquette.append(el('small', { classe: 'position' }, helico(), el('span', { texte: 'DZ' })));
       } else if (etatV.position && etatV.position.position) {
         etiquette.append(el('small', { classe: 'position', texte: etatV.position.position }));
+      }
+      // Carburant à 5/8 ou moins dans la check-list du jour : pompe rouge (plein à faire).
+      const carburant = etatV.statut && etatV.statut.reponses ? parseInt(etatV.statut.reponses.Carburant, 10) : NaN;
+      if (!Number.isNaN(carburant) && carburant <= SEUILS_ANOMALIE.plein) {
+        etiquette.append(el('span', { classe: 'pompe-plein', title: `Carburant ${carburant}/8 : plein à faire` },
+          pompe(), el('span', { classe: 'invisible', texte: `Carburant ${carburant}/8, plein à faire` })));
       }
       if (v.icone) etiquette.append(el('span', { classe: 'icone-vehicule', 'aria-hidden': 'true', texte: v.icone }));
       if (Object.keys(brouillons.lire(v.id)).length) etiquette.append(el('small', { classe: 'en-cours', texte: 'en cours' }));
