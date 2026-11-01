@@ -584,3 +584,28 @@ body.camera-ouverte { overflow: hidden; }
 .case-rester small { display: block; margin-top: 0.15rem; font-size: 0.9rem; font-weight: 400; color: var(--gris); }
 
 .vehicule .icone-vehicule { font-size: 1.5rem; line-height: 1; }
+
+/* ---------- Configuration (administrateurs) ---------- */
+.cfg-section { margin: 1.5rem 0; padding-top: 1rem; border-top: 2px solid var(--bleu); }
+.cfg-section h2 { margin-bottom: 0.4rem; }
+.cfg-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.4rem 0; }
+.cfg-ligne input, .cfg-ligne select { width: auto; flex: 1 1 8rem; min-height: 2.8rem; padding: 0.4rem 0.6rem; }
+.cfg-ligne .cfg-indicatif { flex: 0 1 6rem; font-weight: 700; text-transform: uppercase; }
+.cfg-ligne .cfg-icone { flex: 0 1 3.5rem; text-align: center; }
+.cfg-vehicules .cfg-ligne { padding: 0.3rem 0; border-bottom: 1px solid #E1E8F2; }
+.cfg-bouton, .cfg-mini {
+  min-height: 2.6rem; padding: 0 0.9rem; font-weight: 700; color: var(--bleu);
+  background: var(--ciel); border: 2px solid var(--bleu); border-radius: var(--rayon);
+}
+.cfg-mini { min-height: 2.4rem; padding: 0 0.6rem; font-size: 0.9rem; }
+.cfg-bouton.danger, .cfg-mini.danger { color: var(--erreur); border-color: var(--erreur); background: #fff; }
+.cfg-question { margin: 0.8rem 0; padding: 0.6rem 0.9rem 0.3rem; background: #F6F9FD; border: 1px solid var(--trait); border-radius: var(--rayon); }
+.cfg-question .cfg-ligne:first-child { margin-top: 0; }
+.cfg-type { flex: 1; color: var(--gris); font-size: 0.9rem; }
+.cfg-champ { margin-bottom: 0.6rem; }
+.cfg-case { display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0 0.6rem; font-weight: 400; }
+.cfg-case input { width: 1.4rem; min-height: 0; height: 1.4rem; }
+.cfg-details summary { cursor: pointer; font-weight: 700; color: var(--bleu); margin: 0.2rem 0 0.5rem; }
+.cfg-ajout select { flex: 1 1 14rem; }
+.cfg-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1.5rem; }
+.cfg-actions .principal { width: auto; flex: 1 1 16rem; margin: 0; }

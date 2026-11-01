@@ -35,7 +35,7 @@ const SEUILS_ANOMALIE = {
   carburant: 2, // sur 8 (un quart)
 };
 
-const VEHICULES = [
+let VEHICULES = [
   { id: 'F21', modele: 'VML' },
   { id: 'F22', modele: 'VML' },
   { id: 'F28', modele: 'VML' },
@@ -69,7 +69,7 @@ const BOITE_A_GANTS = {
   items: ['Boîte à ampoules', 'Documents véhicule', 'Constat amiable'],
 };
 
-const MODELES = {
+let MODELES = {
   VML: {
     titre: 'VML',
     questions: [
@@ -167,3 +167,24 @@ const MODELES = {
     ],
   },
 };
+
+/*
+ * Configuration modifiée par un administrateur (écran « Configuration » de l'appli).
+ * Elle est enregistrée sur le serveur et gardée sur l'appareil pour le hors ligne ;
+ * elle remplace les véhicules et les questions ci-dessus. Sans elle, ce fichier s'applique.
+ */
+const CLE_CONFIG = 'smur_config';
+const CONFIG_DEFAUT = JSON.parse(JSON.stringify({ vehicules: VEHICULES, modeles: MODELES }));
+
+function appliquerConfig(config) {
+  const valide = config && Array.isArray(config.vehicules) && config.modeles && typeof config.modeles === 'object';
+  const source = valide ? config : CONFIG_DEFAUT;
+  VEHICULES = JSON.parse(JSON.stringify(source.vehicules));
+  MODELES = JSON.parse(JSON.stringify(source.modeles));
+}
+
+try {
+  appliquerConfig(JSON.parse(localStorage.getItem(CLE_CONFIG)));
+} catch (e) {
+  appliquerConfig(null);
+}

@@ -108,9 +108,34 @@ function afficherApplication(infos) {
   const metier = infos.role === 'ambulancier' || infos.role === 'iade';
   if (metier) $('liste').value = infos.role;
   $('choix-liste').hidden = metier;
+  // Écran de configuration des véhicules et des check-lists : administrateurs seulement.
+  $('option-config').hidden = infos.role !== 'admin';
+  $('option-config').disabled = infos.role !== 'admin';
+  if ($('liste').value === 'config' && infos.role !== 'admin') $('liste').value = 'ambulancier';
   afficherListe($('liste').value);
   envoyerFileAttente();
+  chargerConfig();
   chargerReleves();
+}
+
+/** Configuration des véhicules et des questions, si un administrateur l'a modifiée. */
+async function chargerConfig() {
+  try {
+    const rep = await appeler('lireConfig');
+    if (!rep.ok) return;
+    majConfig(rep.configuration ? rep.configuration.config : null);
+  } catch (err) { /* hors ligne : on garde la configuration enregistrée sur l'appareil */ }
+}
+
+function majConfig(config) {
+  const nouvelle = config ? JSON.stringify(config) : null;
+  if (nouvelle === localStorage.getItem(CLE_CONFIG)) return;
+  try {
+    if (nouvelle) localStorage.setItem(CLE_CONFIG, nouvelle);
+    else localStorage.removeItem(CLE_CONFIG);
+  } catch (e) { /* stockage plein : la configuration s'applique quand même pour cette session */ }
+  appliquerConfig(config);
+  if ($('liste').value === 'ambulancier') Ambulancier.afficher();
 }
 
 /** Derniers kilométrages et état du parc du jour, gardés sur l'appareil pour le hors ligne. */
@@ -314,9 +339,13 @@ $('deconnexion').addEventListener('click', async () => {
 // ---------- Check-lists ----------
 
 function afficherListe(liste) {
+  const config = liste === 'config';
   $('zone-ambulancier').hidden = liste !== 'ambulancier';
-  $('items').hidden = liste === 'ambulancier';
-  if (liste === 'ambulancier') Ambulancier.afficher();
+  $('items').hidden = liste === 'ambulancier' || config;
+  $('zone-config').hidden = !config;
+  document.querySelector('.envoi').hidden = config;
+  if (config) ConfigAdmin.ouvrir();
+  else if (liste === 'ambulancier') Ambulancier.afficher();
   else afficherItems(liste);
   annulerConfirmation();
 }
@@ -396,6 +425,7 @@ function enregistrerAmbulancier() {
 $('liste').addEventListener('change', (e) => afficherListe(e.target.value));
 $('zone-ambulancier').addEventListener('reponse', annulerConfirmation);
 Ambulancier.initialiser();
+ConfigAdmin.initialiser({ appeler, surEnregistrement: majConfig });
 
 $('enregistrer').addEventListener('click', () => {
   if ($('liste').value === 'ambulancier') {

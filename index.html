@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -137,6 +137,7 @@
         <select id="liste">
           <option value="ambulancier">Ambulancier</option>
           <option value="iade">IADE</option>
+          <option id="option-config" value="config" hidden disabled>Configuration (administrateurs)</option>
         </select>
       </div>
 
@@ -151,6 +152,9 @@
         <h2 id="titre-vehicule" class="titre-vehicule" tabindex="-1"></h2>
         <div id="questions"></div>
       </div>
+
+      <!-- Configuration des véhicules et des check-lists (administrateurs) -->
+      <div id="zone-config" class="configuration" hidden></div>
 
       <!-- Check-list IADE : prototype, items fictifs -->
       <ul id="items" class="items" hidden></ul>
@@ -168,9 +172,10 @@
   </footer>
 
   <script src="config.js?v=5"></script>
-  <script src="checklists.js?v=7"></script>
+  <script src="checklists.js?v=8"></script>
   <script src="compteur.js?v=5"></script>
-  <script src="ambulancier.js?v=10"></script>
-  <script src="app.js?v=13"></script>
+  <script src="ambulancier.js?v=11"></script>
+  <script src="config-admin.js?v=1"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

@@ -85,7 +85,8 @@ const Ambulancier = (() => {
 
   // ---------- Modèle courant ----------
   const vehicule = () => VEHICULES.find((v) => v.id === etat.vehicule);
-  const questionBascule = () => MODELES.UMH.questions.find((q) => q.basculeF00);
+  // Question « cette UMH fait-elle office de F00 ? » (absente si la configuration n'a plus ces modèles).
+  const questionBascule = () => (MODELES.UMH && MODELES.F00 ? MODELES.UMH.questions.find((q) => q.basculeF00) || null : null);
 
   /**
    * Une UMH en DZ (qui fait office de F00) se vérifie avec la check-list F00.
@@ -94,7 +95,7 @@ const Ambulancier = (() => {
   function modeleCourant() {
     const v = vehicule();
     if (!v) return null;
-    if (v.modele !== 'UMH') return v.modele;
+    if (v.modele !== 'UMH' || !questionBascule()) return v.modele;
     const position = positionDuJour(v.id);
     if (position) return estDZ(position) ? 'F00' : 'UMH';
     return etat.reponses[questionBascule().libelle] === 'OUI' ? 'F00' : 'UMH';
@@ -102,7 +103,7 @@ const Ambulancier = (() => {
 
   function questionsCourantes() {
     const modele = modeleCourant();
-    if (!modele) return [];
+    if (!modele || !MODELES[modele]) return [];
     const questions = MODELES[modele].questions;
     // Sans état du parc, la question « fait office de F00 » reste en tête pour pouvoir revenir en arrière.
     const avecBascule = vehicule().modele === 'UMH' && modele === 'F00' && !positionDuJour(etat.vehicule);
@@ -120,7 +121,8 @@ const Ambulancier = (() => {
 
   /** Libellés dont la réponse change les questions affichées. */
   function dependances() {
-    const cles = new Set([questionBascule().libelle]);
+    const cles = new Set();
+    if (questionBascule()) cles.add(questionBascule().libelle);
     Object.values(MODELES).forEach((m) => m.questions.forEach((q) => { if (q.si) cles.add(q.si.question); }));
     return cles;
   }
@@ -397,6 +399,10 @@ const Ambulancier = (() => {
       return;
     }
     const modele = modeleCourant();
+    if (!MODELES[modele]) {
+      titre.textContent = `${v.id} : pas de check-list pour le modèle ${v.modele}`;
+      return;
+    }
     titre.textContent = v.modele === 'UMH' && modele === 'F00'
       ? `${v.id} · en DZ, fait office de F00`
       : (v.nom ? v.nom : `${v.id} · ${MODELES[modele].titre}`);
@@ -581,11 +587,10 @@ const Ambulancier = (() => {
     zoneVehicules = document.getElementById('vehicules');
     zoneQuestions = document.getElementById('questions');
     titre = document.getElementById('titre-vehicule');
-    const cles = dependances();
-
     zoneQuestions.addEventListener('change', (e) => {
       enregistrerChamp(e.target);
-      if (cles.has(e.target.dataset.cle)) rendreQuestions();
+      // Recalculé à chaque fois : la configuration peut changer pendant que l'appli est ouverte.
+      if (dependances().has(e.target.dataset.cle)) rendreQuestions();
       signalerChangement();
     });
     zoneQuestions.addEventListener('input', (e) => {
