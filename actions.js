@@ -312,7 +312,7 @@ const Actions = (() => {
 
       const zone = el('div', { classe: `schema schema-${face === 'gauche' || face === 'droite' ? 'cote' : 'face'}` }, silhouette(face, v));
       const placer = (d, numero, classe, action) => {
-        zone.append(el('button', { type: 'button', classe: `marque ${classe}`, style: `left:${d.x * 100}%;top:${d.y * 100}%`,
+        zone.append(el('button', { type: 'button', classe: `repere ${classe}`, style: `left:${d.x * 100}%;top:${d.y * 100}%`,
           'aria-label': `Défaut ${numero}${d.commentaire ? ` : ${d.commentaire}` : ''}`, texte: String(numero), surclick: (e) => { e.stopPropagation(); action(); } }));
       };
       const connus = info.defauts.filter((d) => d.face === face);
@@ -331,8 +331,8 @@ const Actions = (() => {
       corps.append(
         el('p', { classe: 'aide-question', texte: 'Touchez le schéma à l\'endroit d\'un nouveau défaut (rayure, impact, bosse). Les défauts déjà connus sont en gris ; touchez-les pour les voir ou les déclarer réparés.' }),
         onglets, zone,
-        el('p', { classe: 'legende-schema' }, el('span', { classe: 'marque connu', texte: '1' }), ' déjà connu  ',
-          el('span', { classe: 'marque nouveau', texte: '2' }), ' nouveau  ', el('span', { classe: 'marque repare', texte: '3' }), ' réparé'));
+        el('p', { classe: 'legende-schema' }, el('span', { classe: 'repere connu', texte: '1' }), ' déjà connu  ',
+          el('span', { classe: 'repere nouveau', texte: '2' }), ' nouveau  ', el('span', { classe: 'repere repare', texte: '3' }), ' réparé'));
 
       if (detailNouveau && nouveaux.includes(detailNouveau)) {
         const d = detailNouveau;

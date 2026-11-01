@@ -384,7 +384,7 @@ const Parc = (() => {
       el('span', { classe: 'tuile-faces' }, ...['gauche', 'droite'].map((face) => {
         const schema = el('span', { classe: 'schema schema-cote parc-schema' }, Actions.silhouette(face, v));
         info.defauts.filter((d) => d.face === face).forEach((d, i) => schema.append(el('span', {
-          classe: 'marque connu', style: `left:${d.x * 100}%;top:${d.y * 100}%`, texte: String(i + 1),
+          classe: 'repere connu', style: `left:${d.x * 100}%;top:${d.y * 100}%`, texte: String(i + 1),
         })));
         return schema;
       })),
@@ -645,7 +645,7 @@ const Parc = (() => {
       const defauts = info.defauts.filter((d) => d.face === face);
       const schema = el('div', { classe: `schema schema-${face === 'gauche' || face === 'droite' ? 'cote' : 'face'} parc-schema` }, Actions.silhouette(face, v));
       defauts.forEach((d, i) => schema.append(el('span', {
-        classe: 'marque connu', style: `left:${d.x * 100}%;top:${d.y * 100}%`, title: d.commentaire || 'Sans description', texte: String(i + 1),
+        classe: 'repere connu', style: `left:${d.x * 100}%;top:${d.y * 100}%`, title: d.commentaire || 'Sans description', texte: String(i + 1),
       })));
       const liste = el('ol', { classe: 'parc-defauts' });
       defauts.forEach((d) => {

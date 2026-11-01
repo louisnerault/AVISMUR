@@ -775,16 +775,16 @@ body.fenetre-ouverte { overflow: hidden; }
 .silhouette .gyro { fill: #5B8FE0; }
 .silhouette .joint { stroke: var(--encre); stroke-width: 1; }
 .silhouette .roue { fill: #3A4A63; }
-.marque {
+.repere {
   position: absolute; z-index: 1; width: 1.8rem; height: 1.8rem; margin: -0.9rem 0 0 -0.9rem;
   display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;
   color: #fff; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
 }
-.marque.connu { background: #6B7A92; }
-.marque.nouveau { background: var(--erreur); }
-.marque.repare { background: var(--rhone); }
+.repere.connu { background: #6B7A92; }
+.repere.nouveau { background: var(--erreur); }
+.repere.repare { background: var(--rhone); }
 .legende-schema { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--gris); }
-.legende-schema .marque { position: static; margin: 0; width: 1.3rem; height: 1.3rem; font-size: 0.7rem; }
+.legende-schema .repere { position: static; margin: 0; width: 1.3rem; height: 1.3rem; font-size: 0.7rem; }
 .defaut-detail { margin: 0.6rem 0; padding: 0.6rem 0.8rem; background: #F6F9FD; border: 1px solid var(--trait); border-radius: var(--rayon); }
 .defaut-detail h3 { margin: 0 0 0.4rem; font-size: 1rem; }
 
@@ -912,7 +912,7 @@ body.connecte.parc-ouvert .feuille { max-width: 108rem; }
 .parc-face { margin: 0; }
 .parc-face figcaption { font-weight: 700; }
 .parc-schema { cursor: default; }
-.parc-schema .marque { cursor: help; }
+.parc-schema .repere { cursor: help; }
 .parc-defauts { margin: 0.4rem 0 0; padding-left: 1.4rem; font-size: 0.9rem; }
 .parc-defauts li { margin: 0.2rem 0; }
 .parc-defauts .photo-apercu { margin-top: 0.3rem; max-height: 10rem; }
@@ -948,7 +948,7 @@ body.connecte.parc-ouvert .feuille { max-width: 108rem; }
 .tuile-jauge .cadran { width: 5rem; height: 3rem; }
 .tuile-faces { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .tuile-faces .schema { display: block; margin: 0; }
-.tuile-faces .marque { width: 1.2rem; height: 1.2rem; margin: -0.6rem 0 0 -0.6rem; font-size: 0.65rem; }
+.tuile-faces .repere { width: 1.2rem; height: 1.2rem; margin: -0.6rem 0 0 -0.6rem; font-size: 0.65rem; }
 
 /* Panneaux d'historique */
 .parc-panneau-corps { overflow-y: auto; padding-right: 0.4rem; }
