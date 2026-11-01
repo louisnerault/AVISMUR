@@ -246,8 +246,24 @@ const Ambulancier = (() => {
     const info = precedent
       ? `Dernier relevé : ${km(precedent.km)}, le ${new Date(precedent.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}`
       : 'Aucun relevé connu pour ce véhicule.';
+    const ligne = el('div', { classe: 'ligne-km' }, champ);
+    // Lecture du compteur par la caméra.
+    if (Compteur.disponible()) {
+      const photo = el('button', { type: 'button', classe: 'bouton-photo', 'aria-label': 'Lire le compteur avec la caméra' },
+        el('span', { 'aria-hidden': 'true', texte: '📷' }), el('span', { texte: 'Lire le compteur' }));
+      photo.addEventListener('click', async () => {
+        const valeur = await Compteur.lire({ precedent: precedent ? precedent.km : null });
+        if (valeur) {
+          champ.value = String(valeur);
+          enregistrerChamp(champ);
+          signalerChangement();
+        }
+        champ.focus();
+      });
+      ligne.append(photo);
+    }
     const bloc = el('div', { classe: 'champ question' },
-      el('label', { for: id, texte: q.libelle }), el('p', { classe: 'aide-question', texte: info }), champ,
+      el('label', { for: id, texte: q.libelle }), el('p', { classe: 'aide-question', texte: info }), ligne,
       el('p', { classe: 'erreur-champ', 'aria-live': 'polite' }));
     verifierKm(bloc, champ.value);
     return bloc;
@@ -395,19 +411,40 @@ const Ambulancier = (() => {
     if (statut) {
       const note = el('div', { classe: `note-parc ${statut.anomalies.length ? 'anomalie' : 'fait'}` },
         el('p', { texte: `Check-list déjà faite aujourd'hui à ${heure(statut.date)} par ${statut.agent}${statut.anomalies.length ? ', avec des anomalies :' : ', sans anomalie.'}` }));
+      const pied = el('p', { classe: 'note-reprise', texte: 'Ses réponses sont reprises ci-dessous. Pour corriger, modifiez puis enregistrez : la nouvelle check-list remplace la précédente.' });
       if (statut.anomalies.length) {
         const liste = el('ul');
         statut.anomalies.forEach((a) => liste.append(el('li', { texte: a })));
         note.append(liste);
       }
+      if (statut.reponses) note.append(pied);
       zoneQuestions.append(note);
     }
     questionsCourantes().filter(visible).forEach((q) => zoneQuestions.append(rendreQuestion(q)));
   }
 
+  /**
+   * Réponses de la check-list déjà envoyée aujourd'hui, remises au format du formulaire :
+   * on rouvre la check-list telle qu'elle a été remplie.
+   */
+  function repriseDuJour(id) {
+    const statut = statutDuJour(id);
+    if (!statut || !statut.reponses) return {};
+    const reprise = {};
+    Object.entries(statut.reponses).forEach(([cle, valeur]) => {
+      if (valeur === '' || valeur === null || valeur === 'Manquant') return;
+      if (cle === 'Carburant') reprise[cle] = parseInt(valeur, 10); // « 6/8 » → 6
+      else if (cle === 'Kilométrage') reprise[cle] = String(valeur);
+      else reprise[cle] = valeur;
+    });
+    return reprise;
+  }
+
   function choisirVehicule(id) {
     etat.vehicule = id;
-    etat.reponses = brouillons.lire(id);
+    // Brouillon en cours d'abord ; sinon la check-list déjà envoyée aujourd'hui.
+    const brouillon = brouillons.lire(id);
+    etat.reponses = Object.keys(brouillon).length ? brouillon : repriseDuJour(id);
     rendreQuestions();
     signalerChangement();
     titre.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -504,7 +541,9 @@ const Ambulancier = (() => {
     if (saisie) {
       fusionnerStatuts({
         jour: aujourdhui(),
-        vehicules: { [saisie.vehicule]: { date: new Date().toISOString(), agent: agent || '', anomalies: saisie.anomalies } },
+        vehicules: {
+          [saisie.vehicule]: { date: new Date().toISOString(), agent: agent || '', anomalies: saisie.anomalies, reponses: saisie.reponses },
+        },
       });
     }
     if (etat.vehicule) brouillons.effacer(etat.vehicule);

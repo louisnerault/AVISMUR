@@ -524,3 +524,48 @@ body.connecte .envoi {
 }
 
 .avis-parc { margin: 0 0 0.6rem; font-size: 0.9rem; color: var(--gris); font-style: italic; }
+
+/* ---------- Kilométrage : lecture du compteur par la caméra ---------- */
+.ligne-km { display: flex; gap: 0.5rem; }
+.ligne-km input { flex: 1; min-width: 0; }
+.bouton-photo {
+  display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;
+  padding: 0 0.9rem; font-weight: 700; color: var(--bleu);
+  background: var(--ciel); border: 2px solid var(--bleu); border-radius: var(--rayon);
+}
+.note-reprise { margin-top: 0.4rem !important; font-size: 0.9rem; color: var(--gris); }
+
+body.camera-ouverte { overflow: hidden; }
+.camera {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; flex-direction: column;
+  color: #fff; background: #000;
+}
+.camera-vue { position: relative; flex: 1; overflow: hidden; }
+.camera-vue video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.viseur {
+  position: absolute; left: 10%; right: 10%; top: 40%; height: 18%;
+  border: 3px solid var(--orange); border-radius: 10px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
+}
+.consigne-camera {
+  position: absolute; left: 0; right: 0; top: calc(40% - 3rem); margin: 0;
+  text-align: center; font-weight: 700; text-shadow: 0 1px 4px #000;
+}
+.camera .lecture { margin: 0; padding: 0.7rem 1rem; text-align: center; min-height: 2.6rem; }
+.camera-actions {
+  display: flex; gap: 0.75rem;
+  padding: 0.75rem 1rem max(0.9rem, env(safe-area-inset-bottom));
+}
+.camera-bouton {
+  flex: 1; min-height: 3.4rem; font-weight: 700; font-size: 1.05rem;
+  color: #fff; background: var(--bleu); border: 0; border-radius: var(--rayon);
+}
+.camera-bouton.secondaire { background: #3A4A63; }
+.camera-bouton:disabled { opacity: 0.5; }
+.camera-confirmation { flex: 1; overflow: auto; padding: 1.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.camera-confirmation h2 { margin: 0; }
+.camera-confirmation label { color: #fff; }
+.camera-capture { width: 100%; height: auto; max-height: 30vh; object-fit: contain; background: #fff; border-radius: 8px; }
+.camera-confirmation .saisie-km { font-size: 2rem; font-weight: 700; text-align: center; letter-spacing: 0.08em; }
+.camera-confirmation .lecture { padding: 0; text-align: left; }

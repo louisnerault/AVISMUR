@@ -1,7 +1,7 @@
 // À incrémenter à chaque mise à jour, avec les ?v= de index.html.
-const CACHE = 'smur-pwa-v14';
+const CACHE = 'smur-pwa-v15';
 const FICHIERS = [
-  './', 'index.html', 'style.css?v=10', 'app.js?v=10', 'config.js?v=5', 'checklists.js?v=4', 'ambulancier.js?v=5',
+  './', 'index.html', 'style.css?v=11', 'app.js?v=10', 'config.js?v=5', 'checklists.js?v=4', 'ambulancier.js?v=6', 'compteur.js?v=1',
   'manifest.webmanifest',
   'img/logo-smur.png', 'img/logo-cha.png', 'img/icon-192.png', 'img/icon-512.png', 'img/icon-maskable-512.png',
 ];
@@ -23,11 +23,13 @@ self.addEventListener('activate', (e) => {
 // Réseau d'abord, en revalidant toujours auprès du serveur (pas de copie périmée du navigateur).
 // Hors ligne : la dernière version en cache. Les appels à l'API ne passent jamais par le cache.
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || e.request.url.includes('script.google.com')) return;
+  // Seuls les fichiers de l'application passent par le cache ; le reste (API, polices,
+  // moteur de lecture du compteur) va directement au réseau.
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request, { cache: 'no-cache' })
       .then((r) => {
-        if (r.ok && new URL(e.request.url).origin === self.location.origin) {
+        if (r.ok) {
           const copie = r.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copie));
         }
