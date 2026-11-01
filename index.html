@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <!-- ?v= : à incrémenter à chaque mise à jour, avec CACHE dans sw.js -->
-  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="style.css?v=22">
   <title>Check-lists SMUR Avignon</title>
 </head>
 <body>
@@ -173,6 +173,13 @@
         </ul>
       </div>
 
+      <!-- Tableau de bord du parc (ordinateur, menu « Véhicules ») : cases à gauche, tableau ou fiche au centre -->
+      <div id="vue-parc" class="vue-parc" hidden>
+        <h1 class="invisible">Tableau de bord du parc</h1>
+        <div id="parc-liste" class="parc-liste" role="group" aria-label="Véhicules"></div>
+        <div id="parc-centre" class="parc-centre" tabindex="-1"></div>
+      </div>
+
       <!-- Check-list ambulancier : véhicules -->
       <div id="zone-ambulancier" hidden>
         <h1>Vérification du véhicule</h1>
@@ -213,9 +220,10 @@
   <script src="config.js?v=5"></script>
   <script src="checklists.js?v=11"></script>
   <script src="compteur.js?v=5"></script>
-  <script src="ambulancier.js?v=19"></script>
-  <script src="actions.js?v=4"></script>
+  <script src="ambulancier.js?v=20"></script>
+  <script src="actions.js?v=5"></script>
   <script src="config-admin.js?v=5"></script>
-  <script src="app.js?v=19"></script>
+  <script src="parc.js?v=1"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>

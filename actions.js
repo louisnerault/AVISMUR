@@ -80,7 +80,7 @@ const Actions = (() => {
       el('div', { classe: 'actions' },
         action('📋', cl ? 'Reprendre la check-list du jour' : 'Faire la check-list du jour',
           cl ? `Faite à ${new Date(cl.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} par ${cl.agent}` : 'Vérification du matin',
-          () => { fermer(); Ambulancier.ouvrirChecklist(v.id); }, true),
+          () => { fermer(); App.ouvrirChecklist(v.id); }, true),
         action('👁️', 'Voir la dernière check-list', info.derniereCL ? `${date(info.derniereCL.date)} · ${info.derniereCL.agent}` : 'Aucune check-list enregistrée',
           () => voirCheckList(v, info, etatV, info.derniereCL)),
         v.sansPlein ? null : action('⛽', 'Signaler un plein', info.dernierPlein ? `Dernier : ${date(info.dernierPlein.date)}` : 'Carburant, AdBlue, ticket', () => plein(v, info, etatV)),
@@ -385,5 +385,6 @@ const Actions = (() => {
       boutonRetour(v, info, etatV));
   }
 
-  return { ouvrir, fermer };
+  // silhouette, FACES et afficherPhotoServeur sont aussi utilisés par le tableau de bord du parc (parc.js).
+  return { ouvrir, fermer, silhouette, FACES, afficherPhotoServeur };
 })();

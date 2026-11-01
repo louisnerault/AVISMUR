@@ -401,7 +401,7 @@ function afficherListe(liste) {
  */
 function majBarreEnvoi() {
   const liste = $('liste').value;
-  const visible = !$('ecran-checklist').hidden && liste !== 'config' && $('vue-plus').hidden
+  const visible = !$('ecran-checklist').hidden && liste !== 'config' && $('vue-plus').hidden && $('vue-parc').hidden
     && (liste !== 'ambulancier' || Boolean(Ambulancier.vehiculeChoisi()));
   document.querySelector('.envoi').hidden = !visible;
 }
@@ -492,20 +492,28 @@ function enregistrerAmbulancier() {
 
 // ---------- Menu principal ----------
 // Une vue par entrée du menu. « Aujourd'hui » : check-list du jour (liste choisie selon le rôle).
-// « Véhicules » : même écran, avec l'ambulancier forcé et le choix de véhicule en tête.
+// « Véhicules » : sur ordinateur, tableau de bord du parc (parc.js) ; sinon l'écran de check-list avec le choix de véhicule en tête.
 // « Plus » : configuration (admin) et déconnexion. Pour une nouvelle fonctionnalité, voir README.md.
 let roleCourant = '';
+let vueCourante = 'aujourdhui';
+// Sur ordinateur, « Véhicules » ouvre le tableau de bord du parc (parc.js) au lieu de la liste de cases.
+const GRAND_ECRAN = window.matchMedia('(min-width: 1100px)');
 
 function ouvrirVue(vue) {
   if (vue === 'vehicules' && roleCourant === 'iade') vue = 'aujourdhui';
+  vueCourante = vue;
   document.querySelectorAll('[data-vue]').forEach((bouton) => {
     if (bouton.dataset.vue === vue) bouton.setAttribute('aria-current', 'page');
     else bouton.removeAttribute('aria-current');
   });
   const metier = roleCourant === 'ambulancier' || roleCourant === 'iade';
   const plus = vue === 'plus';
+  const parc = vue === 'vehicules' && GRAND_ECRAN.matches;
+  document.body.classList.toggle('parc-ouvert', parc);
+  if (parc) Parc.afficher();
+  else Parc.masquer();
   $('vue-plus').hidden = !plus;
-  if (plus) {
+  if (plus || parc) {
     $('lien-configuration').hidden = roleCourant !== 'admin';
     ['zone-ambulancier', 'zone-config', 'items', 'choix-liste'].forEach((id) => { $(id).hidden = true; });
     document.querySelector('.envoi').hidden = true;
@@ -516,6 +524,17 @@ function ouvrirVue(vue) {
   else if (metier) $('liste').value = roleCourant;
   afficherListe($('liste').value);
   if (vue === 'vehicules') $('vehicules').scrollIntoView({ block: 'start' });
+}
+
+// Changement de taille de fenêtre (ou rotation) pendant que « Véhicules » est ouvert.
+GRAND_ECRAN.addEventListener('change', () => {
+  if (vueCourante === 'vehicules' && !$('ecran-checklist').hidden) ouvrirVue('vehicules');
+});
+
+/** Ouvre la check-list d'un véhicule, y compris depuis le tableau de bord du parc. */
+function ouvrirChecklist(id) {
+  if (!$('vue-parc').hidden) ouvrirVue('aujourdhui');
+  Ambulancier.ouvrirChecklist(id);
 }
 
 document.querySelectorAll('[data-vue]').forEach((bouton) => {
@@ -536,8 +555,9 @@ $('vue-plus').addEventListener('click', (e) => {
 $('liste').addEventListener('change', (e) => afficherListe(e.target.value));
 $('zone-ambulancier').addEventListener('reponse', () => { annulerConfirmation(); majBarreEnvoi(); });
 // Accès pour les écrans d'actions (actions.js).
-window.App = { appeler, envoyerEvenement };
+window.App = { appeler, envoyerEvenement, ouvrirChecklist };
 Ambulancier.initialiser();
+Parc.initialiser({ appeler });
 ConfigAdmin.initialiser({ appeler, surEnregistrement: majConfig });
 
 $('enregistrer').addEventListener('click', () => {

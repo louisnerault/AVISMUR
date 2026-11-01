@@ -4,6 +4,7 @@ Check-lists du SMUR d'Avignon, servies par GitHub Pages. Fonctionne hors ligne :
 
 - `checklists.js` : véhicules et questions de la check-list ambulancier. **C'est ce fichier qu'on modifie** pour ajouter un véhicule ou un élément à vérifier.
 - `ambulancier.js` : écran de la check-list ambulancier (brouillon gardé sur l'appareil jusqu'à l'envoi).
+- `parc.js` : tableau de bord du parc (ordinateur, écran ≥ 1100 px) : menu « Véhicules » → cases empilées à gauche, tableau de tous les éléments des check-lists du jour au centre ; clic sur un véhicule → fiche (5 dernières vérifications, cartographie des impacts, pleins, garage). Historique gardé sur l'appareil pour le hors ligne.
 - `app.js` : connexion, file d'attente hors ligne, envoi.
 - `config.js` : URL de l'Apps Script (dépôt `AVISMUR-backend`).
 
@@ -11,7 +12,7 @@ Check-lists du SMUR d'Avignon, servies par GitHub Pages. Fonctionne hors ligne :
 
 ## Navigation
 
-Menu principal (barre basse, une fois connecté) : **Aujourd'hui** (check-list du jour), **Véhicules** (ambulanciers et encadrement), **Plus** (configuration pour les admins, déconnexion). Les entrées ne sont ajoutées que pour les fonctionnalités réellement disponibles. Chaque vue est gérée par `ouvrirVue()` dans `app.js`.
+Menu principal (barre basse, une fois connecté) : **Aujourd'hui** (check-list du jour), **Véhicules** (ambulanciers et encadrement ; tableau de bord du parc sur ordinateur), **Plus** (configuration pour les admins, déconnexion). Les entrées ne sont ajoutées que pour les fonctionnalités réellement disponibles. Chaque vue est gérée par `ouvrirVue()` dans `app.js`.
 
 Règle pour toute nouvelle fonctionnalité :
 1. Lui créer une entrée : dans la barre basse si elle est utilisée tous les jours, sinon dans « Plus ».

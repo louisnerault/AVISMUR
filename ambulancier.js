@@ -399,15 +399,21 @@ const Ambulancier = (() => {
     return svg;
   }
 
-  /** Grande case d'un véhicule : état de la check-list du jour, position, carburant, oxygène, garage. */
-  function carte(v) {
+  /**
+   * Grande case d'un véhicule : état de la check-list du jour, position, carburant, oxygène, garage.
+   * Options (tableau de bord du parc) : `compacte` (sans cadran ni garage), `choisi` (case sélectionnée)
+   * et `surClic` (remplace l'ouverture du menu d'actions).
+   */
+  function carte(v, { compacte = false, choisi, surClic } = {}) {
     const etatV = etatVehicule(v);
     const info = infosVehicule(v.id);
+    const estChoisi = choisi === undefined ? etat.vehicule === v.id : choisi;
     const bouton = el('button', {
-      type: 'button', classe: `vehicule carte ${etatV.classe}${etat.vehicule === v.id ? ' choisi' : ''}`,
-      'aria-haspopup': 'dialog', 'data-vehicule': v.id,
+      type: 'button', classe: `vehicule carte ${etatV.classe}${estChoisi ? ' choisi' : ''}${compacte ? ' compacte' : ''}`,
+      'data-vehicule': v.id,
+      ...(surClic ? { 'aria-pressed': String(estChoisi) } : { 'aria-haspopup': 'dialog' }),
     });
-    bouton.addEventListener('click', () => Actions.ouvrir(v, info, etatV));
+    bouton.addEventListener('click', surClic || (() => Actions.ouvrir(v, info, etatV)));
 
     // En-tête : indicatif, type, icône, position du jour
     const position = el('span', { classe: 'position' });
@@ -474,6 +480,8 @@ const Ambulancier = (() => {
     }
     // Un véhicule désactivé par un administrateur n'apparaît plus.
     VEHICULES.filter((v) => !v.inactif).forEach((v) => zoneVehicules.append(carte(v)));
+    // Prévient le tableau de bord du parc (ordinateur) que les données ont changé.
+    document.dispatchEvent(new CustomEvent('parc-maj'));
   }
 
 
@@ -730,6 +738,7 @@ const Ambulancier = (() => {
   }
 
   return {
-    initialiser, finChargement, infosVehicule, noterEvenement, ouvrirChecklist: (id) => choisirVehicule(id),
+    initialiser, finChargement, infosVehicule, etatVehicule, estDZ, helico, creerCarte: carte, noterEvenement,
+    ouvrirChecklist: (id) => choisirVehicule(id),
     vehiculeChoisi: () => etat.vehicule, afficher: () => { rendreVehicules(); rendreQuestions(); }, lire, terminer, majReleves };
 })();

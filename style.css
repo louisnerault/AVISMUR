@@ -818,3 +818,100 @@ body.fenetre-ouverte { overflow: hidden; }
 }
 .vehicule.carte.indispo .ligne-titre strong { color: var(--encre); }
 .vehicule.carte.indispo .position { color: var(--erreur); }
+
+/* ---------- Tableau de bord du parc (ordinateur, menu « Véhicules ») ---------- */
+body.connecte.parc-ouvert .feuille { max-width: 108rem; }
+.vue-parc { display: grid; grid-template-columns: 17rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.parc-liste {
+  display: grid; gap: 0.55rem; padding: 4px;
+  position: sticky; top: 0.75rem; max-height: calc(100vh - 6rem); overflow-y: auto;
+}
+.parc-centre { min-width: 0; }
+.parc-centre:focus { outline: none; }
+
+/* Cases de la colonne de gauche : version compacte (sans cadran ni garage) */
+.vehicule.carte.compacte { padding: 0.5rem 0.7rem; gap: 0.2rem; }
+.vehicule.carte.compacte .carte-entete .ligne-titre strong { font-size: 1.15rem; }
+.vehicule.carte.compacte .carte-discret,
+.vehicule.carte.compacte .cadran { display: none; }
+.vehicule.carte.compacte .carte-ligne { font-size: 0.85rem; }
+
+/* Tableau d'ensemble */
+.parc-tableau-zone { overflow: auto; max-height: calc(100vh - 11rem); border: 1px solid var(--trait); border-radius: var(--rayon); background: #fff; }
+.parc-tableau-zone:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+.parc-tableau { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
+.parc-tableau th, .parc-tableau td { padding: 0.3rem 0.45rem; text-align: center; white-space: nowrap; border-bottom: 1px solid #E1E8F2; border-left: 1px solid #EEF2F8; }
+.parc-tableau thead th { position: sticky; top: 0; z-index: 2; padding: 0.3rem; background: #fff; border-bottom: 2px solid var(--bleu); vertical-align: bottom; }
+.parc-tableau .parc-libelle { position: sticky; left: 0; z-index: 1; min-width: 12rem; text-align: left; white-space: normal; font-weight: 400; background: #fff; border-left: 0; }
+.parc-tableau thead .parc-libelle { z-index: 3; font-weight: 700; vertical-align: middle; }
+.parc-tableau tbody tr:hover td, .parc-tableau tbody tr:hover .parc-libelle { background-color: #F3F7FC; }
+.parc-section th { position: static; text-align: left; padding: 0.35rem 0.6rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--bleu); background: var(--ciel); }
+.parc-synthese .parc-libelle { font-weight: 700; }
+.parc-vide { padding: 1rem; color: var(--gris); font-style: italic; }
+.parc-note { margin: 0.6rem 0 0; }
+
+/* En-tête de colonne : mêmes couleurs que les cases véhicules */
+.parc-th-bouton {
+  display: flex; flex-direction: column; align-items: center; gap: 0.05rem; width: 100%; min-width: 5.4rem; padding: 0.35rem 0.3rem;
+  font: inherit; color: var(--encre); cursor: pointer; border: 2px solid; border-radius: 10px;
+}
+.parc-th-bouton strong { font-size: 1rem; }
+.parc-th-bouton small { font-size: 0.7rem; color: var(--gris); }
+.parc-th-position { display: inline-flex; align-items: center; gap: 0.2rem; min-height: 1.1rem; font-size: 0.72rem; font-weight: 700; }
+.parc-th-bouton.a-faire { background: #EEF1F5; border-color: #B9C3D1; }
+.parc-th-bouton.fait { background: #DDF3EF; border-color: var(--rhone); }
+.parc-th-bouton.anomalie { background: #FFE9D2; border-color: var(--orange); }
+.parc-th-bouton.indispo {
+  color: var(--gris); border-color: #9AA6B8; background-color: #EEF1F5;
+  background-image: repeating-linear-gradient(135deg, rgb(74 91 118 / 0.16) 0 8px, transparent 8px 18px);
+}
+.parc-th-bouton.indispo .parc-th-position { color: var(--erreur); }
+.parc-th-bouton:hover { box-shadow: 0 3px 10px rgb(19 41 75 / 0.18); }
+.parc-th-bouton:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+/* Cellules */
+.parc-tableau td.ok { color: var(--rhone); font-weight: 700; }
+.parc-tableau td.mauvais { color: var(--erreur); font-weight: 700; background-color: #FDE3E1; }
+.parc-tableau td.attention { font-weight: 700; background-color: #FFE9D2; }
+.parc-tableau td.na { color: #9AA6B8; }
+.parc-tableau td.col-afaire { background-color: #F6F7F9; }
+.parc-tableau td.col-indispo { background-color: #EEF1F5; background-image: repeating-linear-gradient(135deg, rgb(74 91 118 / 0.1) 0 8px, transparent 8px 18px); }
+
+/* Fiche d'un véhicule */
+.parc-entete { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.8rem 1.5rem; }
+.parc-titre { display: flex; align-items: baseline; gap: 0.6rem; margin: 0; font-size: 1.8rem; }
+.parc-titre small { font-size: 1rem; font-weight: 400; color: var(--gris); }
+.parc-etat { display: inline-block; margin: 0.3rem 0 0; padding: 0.15rem 0.7rem; font-weight: 700; border: 2px solid; border-radius: 999px; }
+.parc-etat.a-faire { background: #EEF1F5; border-color: #B9C3D1; }
+.parc-etat.fait { background: #DDF3EF; border-color: var(--rhone); }
+.parc-etat.anomalie { background: #FFE9D2; border-color: var(--orange); }
+.parc-etat.indispo { background: #FDE3E1; border-color: var(--erreur); }
+.parc-boutons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.parc-bloc { margin: 1.5rem 0 0; padding-top: 1rem; border-top: 2px solid var(--bleu); }
+.parc-bloc h2 { margin: 0 0 0.6rem; }
+
+/* 5 dernières vérifications */
+.parc-verifs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.parc-verifs details { border: 1px solid var(--trait); border-radius: var(--rayon); background: #fff; }
+.parc-verifs summary { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.8rem; padding: 0.6rem 0.8rem; cursor: pointer; }
+.parc-verifs details[open] summary { border-bottom: 1px solid #E1E8F2; }
+.parc-verifs details > :not(summary) { margin-left: 0.8rem; margin-right: 0.8rem; }
+.parc-verifs .reponses { columns: 2 18rem; column-gap: 2rem; margin-bottom: 0.8rem; }
+.parc-verifs .reponse { break-inside: avoid; }
+.parc-verifs .pastille-etat.fait { background: var(--rhone); }
+.parc-verifs .pastille-etat.anomalie { background: var(--orange); }
+.parc-resume { color: var(--gris); }
+.parc-badge { margin-left: auto; padding: 0.05rem 0.6rem; font-size: 0.85rem; font-weight: 700; border-radius: 999px; }
+.parc-badge.ok { color: var(--rhone); background: #E3F5F2; }
+.parc-badge.attention { background: #FFE9D2; }
+
+/* Cartographie des impacts : 4 faces, lecture seule */
+.parc-faces { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem 2rem; }
+.parc-face { margin: 0; }
+.parc-face figcaption { font-weight: 700; }
+.parc-schema { cursor: default; }
+.parc-schema .marque { cursor: help; }
+.parc-defauts { margin: 0.4rem 0 0; padding-left: 1.4rem; font-size: 0.9rem; }
+.parc-defauts li { margin: 0.2rem 0; }
+.parc-defauts .photo-apercu { margin-top: 0.3rem; max-height: 10rem; }
+.parc-bloc .historique { max-width: 50rem; }
