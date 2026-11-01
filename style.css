@@ -544,12 +544,12 @@ body.camera-ouverte { overflow: hidden; }
 .camera-vue { position: relative; flex: 1; overflow: hidden; }
 .camera-vue video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .viseur {
-  position: absolute; left: 10%; right: 10%; top: 40%; height: 18%;
+  position: absolute; left: 15%; right: 15%; top: 42%; height: 9%; min-height: 3rem;
   border: 3px solid var(--orange); border-radius: 10px;
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
 }
 .consigne-camera {
-  position: absolute; left: 0; right: 0; top: calc(40% - 3rem); margin: 0;
+  position: absolute; left: 1rem; right: 1rem; top: calc(42% - 4rem); margin: 0;
   text-align: center; font-weight: 700; text-shadow: 0 1px 4px #000;
 }
 .camera .lecture { margin: 0; padding: 0.7rem 1rem; text-align: center; min-height: 2.6rem; }
@@ -569,3 +569,10 @@ body.camera-ouverte { overflow: hidden; }
 .camera-capture { width: 100%; height: auto; max-height: 30vh; object-fit: contain; background: #fff; border-radius: 8px; }
 .camera-confirmation .saisie-km { font-size: 2rem; font-weight: 700; text-align: center; letter-spacing: 0.08em; }
 .camera-confirmation .lecture { padding: 0; text-align: left; }
+
+.camera-options { position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
+.camera-option {
+  min-height: 2.8rem; padding: 0 0.9rem; font-weight: 700; color: #fff;
+  background: rgb(0 0 0 / 0.55); border: 2px solid rgb(255 255 255 / 0.7); border-radius: 999px;
+}
+.camera-option[aria-pressed="true"] { color: #000; background: #FFD84D; border-color: #FFD84D; }

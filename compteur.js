@@ -41,10 +41,12 @@ const Compteur = (() => {
   }
 
   /**
-   * Image du cadre de visée, en noir sur blanc et contrastée :
-   * les compteurs à cristaux liquides ont souvent des chiffres clairs sur fond sombre.
+   * Image du cadre de visée en niveaux de gris, contraste étiré, agrandie.
+   * Pas de passage en noir et blanc ici : Tesseract le fait mieux lui-même, et un seuil
+   * trop brutal fond les chiffres en une seule tache. On fournit aussi la version
+   * inversée, pour les compteurs à chiffres clairs sur fond sombre.
    */
-  function imageDuCadre(video, cadre) {
+  function imagesDuCadre(video, cadre) {
     const vr = video.getBoundingClientRect();
     const cr = cadre.getBoundingClientRect();
     // La vidéo remplit l'écran en « cover » : on retrouve la zone correspondante dans l'image source.
@@ -56,33 +58,42 @@ const Compteur = (() => {
     const sw = cr.width / echelle;
     const sh = cr.height / echelle;
 
-    const hauteur = 120;
+    const hauteur = 160;
     const largeur = Math.round((sw / sh) * hauteur);
-    const canvas = document.createElement('canvas');
-    canvas.width = largeur;
-    canvas.height = hauteur;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const normale = document.createElement('canvas');
+    normale.width = largeur;
+    normale.height = hauteur;
+    const ctx = normale.getContext('2d', { willReadFrequently: true });
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, largeur, hauteur);
 
     const img = ctx.getImageData(0, 0, largeur, hauteur);
     const px = img.data;
-    let somme = 0;
+    // Niveaux de gris puis étirement entre les 2 % les plus sombres et les 2 % les plus clairs.
+    const histo = new Array(256).fill(0);
     for (let i = 0; i < px.length; i += 4) {
-      const g = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+      const g = Math.round(0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]);
       px[i] = g;
-      somme += g;
+      histo[g] += 1;
     }
-    const moyenne = somme / (px.length / 4);
-    const inverser = moyenne < 110; // fond sombre : on inverse pour avoir des chiffres noirs
+    const total = px.length / 4;
+    let bas = 0;
+    let haut = 255;
+    for (let cumul = 0; bas < 255 && (cumul += histo[bas]) < total * 0.02; bas += 1);
+    for (let cumul = 0; haut > 0 && (cumul += histo[haut]) < total * 0.02; haut -= 1);
+    const etendue = Math.max(haut - bas, 1);
+    const inverse = ctx.createImageData(largeur, hauteur);
     for (let i = 0; i < px.length; i += 4) {
-      let g = px[i];
-      if (inverser) g = 255 - g;
-      const seuil = inverser ? 255 - moyenne : moyenne;
-      const v = g < seuil * 0.85 ? 0 : 255;
+      const v = Math.max(0, Math.min(255, ((px[i] - bas) * 255) / etendue));
       px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
+      inverse.data[i] = 255 - v; inverse.data[i + 1] = 255 - v; inverse.data[i + 2] = 255 - v; inverse.data[i + 3] = 255;
     }
     ctx.putImageData(img, 0, 0);
-    return canvas;
+    const inversee = document.createElement('canvas');
+    inversee.width = largeur;
+    inversee.height = hauteur;
+    inversee.getContext('2d').putImageData(inverse, 0, 0);
+    return [normale, inversee];
   }
 
   /** Nombre le plus vraisemblable dans le texte lu (4 à 7 chiffres, proche du dernier relevé). */
@@ -121,8 +132,11 @@ const Compteur = (() => {
       const etat = el('p', { classe: 'lecture', role: 'status', texte: 'Ouverture de la caméra…' });
       const annuler = el('button', { type: 'button', classe: 'camera-bouton secondaire', texte: 'Annuler' });
       const capturer = el('button', { type: 'button', classe: 'camera-bouton', texte: 'Capturer' });
+      const zoom = el('button', { type: 'button', classe: 'camera-option', hidden: '', 'aria-label': 'Zoom' });
+      const lampe = el('button', { type: 'button', classe: 'camera-option', hidden: '', 'aria-pressed': 'false', texte: '🔦 Lampe' });
       const vue = el('div', { classe: 'camera-vue' }, video, cadre,
-        el('p', { classe: 'consigne-camera', texte: 'Visez le compteur kilométrique dans le cadre' }));
+        el('div', { classe: 'camera-options' }, zoom, lampe),
+        el('p', { classe: 'consigne-camera', texte: 'Approchez : les chiffres du kilométrage doivent remplir le cadre' }));
       const ecran = el('div', { classe: 'camera', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Lecture du compteur' },
         vue, etat, el('div', { classe: 'camera-actions' }, annuler, capturer));
       document.body.appendChild(ecran);
@@ -178,11 +192,15 @@ const Compteur = (() => {
         if (occupe || fini || !video.videoWidth) return;
         occupe = true;
         try {
-          const image = imageDuCadre(video, cadre);
+          const [image, inversee] = imagesDuCadre(video, cadre);
           const w = await preparerMoteur();
           if (fini) return;
-          const { data } = await w.recognize(image);
-          const valeur = choisirValeur(data.text, precedent);
+          let valeur = choisirValeur((await w.recognize(image)).data.text, precedent);
+          if (!plausible(valeur, precedent) && !fini) {
+            const autre = choisirValeur((await w.recognize(inversee)).data.text, precedent);
+            if (autre !== null && (valeur === null || plausible(autre, precedent))) valeur = autre;
+          }
+          if (fini) return;
           if (manuel) {
             confirmer(valeur, image);
           } else if (plausible(valeur, precedent) && valeur === derniere) {
@@ -202,6 +220,32 @@ const Compteur = (() => {
         }
       }
 
+      /** Zoom et lampe, si le téléphone les propose (Chrome sur Android, le plus souvent). */
+      function reglagesCamera(piste) {
+        const capacites = piste && piste.getCapabilities ? piste.getCapabilities() : {};
+        if (capacites.zoom && capacites.zoom.max > capacites.zoom.min) {
+          const niveaux = [1, 2, 3].map((n) => Math.min(Math.max(n, capacites.zoom.min), capacites.zoom.max))
+            .filter((n, i, t) => t.indexOf(n) === i);
+          let rang = niveaux.length > 1 ? 1 : 0; // zoom ×2 d'emblée : on vise mieux les petits chiffres
+          const appliquer = () => {
+            piste.applyConstraints({ advanced: [{ zoom: niveaux[rang] }] }).catch(() => {});
+            zoom.textContent = `🔍 ×${niveaux[rang]}`;
+          };
+          zoom.hidden = false;
+          zoom.addEventListener('click', () => { rang = (rang + 1) % niveaux.length; appliquer(); });
+          appliquer();
+        }
+        if (capacites.torch) {
+          let allumee = false;
+          lampe.hidden = false;
+          lampe.addEventListener('click', () => {
+            allumee = !allumee;
+            piste.applyConstraints({ advanced: [{ torch: allumee }] }).catch(() => {});
+            lampe.setAttribute('aria-pressed', String(allumee));
+          });
+        }
+      }
+
       annuler.addEventListener('click', () => fermer(null));
       capturer.addEventListener('click', () => analyser(true));
       ecran.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermer(null); });
@@ -213,6 +257,7 @@ const Compteur = (() => {
         if (fini) { f.getTracks().forEach((t) => t.stop()); return; }
         flux = f;
         video.srcObject = f;
+        reglagesCamera(f.getVideoTracks()[0]);
         etat.textContent = 'Chargement de la reconnaissance…';
         preparerMoteur().then(() => {
           if (fini) return;
